@@ -42,6 +42,8 @@ public partial class QuarkDbContext : DbContext
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
+            entity.HasMany(e => e.Users).WithMany(e => e.Conversations)
+                .UsingEntity<UsersConversation>();
         });
 
         modelBuilder.Entity<Department>(entity =>
@@ -146,18 +148,11 @@ public partial class QuarkDbContext : DbContext
 
         modelBuilder.Entity<UsersConversation>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("users_conversations");
-            entity.HasIndex(e => new {e.UsersId, e.ConversationsId})//----------------new
-                .IsUnique(true);
+            entity.HasKey(e => new {e.UsersId, e.ConversationsId});//--------new
+            entity.ToTable("users_conversations");
             entity.Property(e => e.ConversationsId)
-                .ValueGeneratedOnAdd()
-                .UseIdentityAlwaysColumn()
                 .HasColumnName("conversations_id");
             entity.Property(e => e.UsersId)
-                .ValueGeneratedOnAdd()
-                .UseIdentityAlwaysColumn()
                 .HasColumnName("users_id");
 
             entity.HasOne(d => d.Conversations).WithMany()

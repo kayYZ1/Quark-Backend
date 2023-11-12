@@ -112,7 +112,7 @@ public partial class QuarkDbContext : DbContext
                 .IsUnique(true);
             entity.HasIndex(e => e.Email)//------------------------------------------new
                 .IsUnique(true);
-                
+
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("id");

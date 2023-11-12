@@ -53,27 +53,20 @@ public class UsersController : ControllerBase
         {
             return Ok("Too few information about users to search for them."); //should be Ok response?
         }
-        if(jobPosition is null)
+        if(jobPosition is null)//for now applying only null arguments will return all users
         {
-            searchedUsers = _context.Users // is there a check against null? --------------------------------------
-                .Where(u => u.FirstName == firstName)
-                .Where(u => u.LastName == lastName)
-                .Where(u => u.JobPosition.Department.Equals(department)).Where(u => u.Email == email);
+            searchedUsers = _context.Users
+                .Where(u => !(firstName == null) || u.FirstName == firstName)
+                .Where(u => !(lastName == null) || u.LastName == lastName)
+                .Where(u => !(department == null) || u.JobPosition.Department.Equals(department))
+                .Where(u =>!(email == null) ||  u.Email == email);//email for test purpose only
         }
         else
         {
             searchedUsers = _context.Users
-                .Where(u => u.FirstName == firstName)
-                .Where(u => u.LastName == lastName)
+                .Where(u => !(firstName == null) || u.FirstName == firstName)
+                .Where(u => !(lastName == null) || u.LastName == lastName)
                 .Where(u => u.JobPosition.Equals(jobPosition));
-        }
-        try 
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch 
-        {
-            throw;
         }
         return Ok(searchedUsers);
     }

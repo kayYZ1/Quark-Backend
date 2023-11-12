@@ -58,14 +58,14 @@ public class UsersController : ControllerBase
             searchedUsers = _context.Users // is there a check against null? --------------------------------------
                 .Where(u => u.FirstName == firstName)
                 .Where(u => u.LastName == lastName)
-                .Where(u => u.Job.Department.Equals(department)).Where(u => u.Email == email);
+                .Where(u => u.JobPosition.Department.Equals(department)).Where(u => u.Email == email);
         }
         else
         {
             searchedUsers = _context.Users
                 .Where(u => u.FirstName == firstName)
                 .Where(u => u.LastName == lastName)
-                .Where(u => u.Job.Equals(jobPosition));
+                .Where(u => u.JobPosition.Equals(jobPosition));
         }
         try 
         {
@@ -81,7 +81,6 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Clear()
     {
-        _context.Users.FromSql($"TRUNCATE [userTable] RESTART IDENTITY;");
         _context.Users.RemoveRange(_context.Users);
         try
         {

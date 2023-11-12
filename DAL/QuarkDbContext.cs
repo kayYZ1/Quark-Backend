@@ -108,13 +108,20 @@ public partial class QuarkDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("users_pkey");
 
             entity.ToTable("users");
-
+            entity.HasIndex(e => e.Username)//---------------------------------------new
+                .IsUnique(true);
+            entity.HasIndex(e => e.Email)//------------------------------------------new
+                .IsUnique(true);
+                
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
             entity.Property(e => e.Email)
                 .HasMaxLength(30)
                 .HasColumnName("email");
+            entity.Property(e => e.Username)//----------------------------------------new
+                .HasMaxLength(30)
+                .HasColumnName("username");
             entity.Property(e => e.FirstName)
                 .HasMaxLength(20)
                 .HasColumnName("first_name");
@@ -129,10 +136,12 @@ public partial class QuarkDbContext : DbContext
             entity.Property(e => e.SelfDescription)
                 .HasMaxLength(300)
                 .HasColumnName("self_description");
-
-            entity.HasOne(d => d.Job).WithMany(p => p.Users)
+            entity.Property(e => e.PictureUrl)//------------------------------------new
+                .HasMaxLength(40)
+                .HasColumnName("picture_url");
+            entity.HasOne(d => d.JobPosition).WithMany(p => p.Users)
                 .HasForeignKey(d => d.JobId)
-                .HasConstraintName("job");
+                .HasConstraintName("users_job_positions_id_fkey");//--------------updated
         });
 
         modelBuilder.Entity<UsersConversation>(entity =>
@@ -140,7 +149,8 @@ public partial class QuarkDbContext : DbContext
             entity
                 .HasNoKey()
                 .ToTable("users_conversations");
-
+            entity.HasIndex(e => new {e.UsersId, e.ConversationsId})//----------------new
+                .IsUnique(true);
             entity.Property(e => e.ConversationsId)
                 .ValueGeneratedOnAdd()
                 .UseIdentityAlwaysColumn()

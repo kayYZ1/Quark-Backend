@@ -26,5 +26,5 @@ public partial class User
     public virtual JobPosition? JobPosition { get; set; }
 
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
-    public virtual ICollection<Conversation> Conversations { get; }
+    public virtual ICollection<Conversation> Conversations { get; } = new List<Conversation>();
 }

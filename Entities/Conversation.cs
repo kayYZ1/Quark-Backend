@@ -8,5 +8,5 @@ public partial class Conversation
     public int Id { get; set; }
 
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
-    public virtual ICollection<User> Users { get; }
+    public virtual ICollection<User> Users { get; } = new List<User>();
 }

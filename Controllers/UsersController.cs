@@ -92,7 +92,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Register(string email)
     {
         //'@quark.com' has 10 letters; email column has max length 30
-        string pattern = @"^([A-Z]?|[a-z])[a-z]{0,9}\.([A-Z]?|[a-z])[a-z]{0,9}@quark\.com";
+        string pattern = @"^([A-Z]?|[a-z])[a-z]{0,19}\.([A-Z]?|[a-z])[a-z]{0,19}@quark\.com";
         
         if(Regex.IsMatch(email, pattern) == false)//check email format
         {

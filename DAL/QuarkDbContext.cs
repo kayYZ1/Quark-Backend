@@ -119,7 +119,7 @@ public partial class QuarkDbContext : DbContext
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
             entity.Property(e => e.Email)
-                .HasMaxLength(30)
+                .HasMaxLength(50)
                 .HasColumnName("email");
             entity.Property(e => e.Username)
                 .HasMaxLength(30)

@@ -110,9 +110,9 @@ public partial class QuarkDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("users_pkey");
 
             entity.ToTable("users");
-            entity.HasIndex(e => e.Username)//---------------------------------------new
+            entity.HasIndex(e => e.Username)
                 .IsUnique(true);
-            entity.HasIndex(e => e.Email)//------------------------------------------new
+            entity.HasIndex(e => e.Email)
                 .IsUnique(true);
 
             entity.Property(e => e.Id)
@@ -121,7 +121,7 @@ public partial class QuarkDbContext : DbContext
             entity.Property(e => e.Email)
                 .HasMaxLength(30)
                 .HasColumnName("email");
-            entity.Property(e => e.Username)//----------------------------------------new
+            entity.Property(e => e.Username)
                 .HasMaxLength(30)
                 .HasColumnName("username");
             entity.Property(e => e.FirstName)
@@ -138,17 +138,17 @@ public partial class QuarkDbContext : DbContext
             entity.Property(e => e.SelfDescription)
                 .HasMaxLength(300)
                 .HasColumnName("self_description");
-            entity.Property(e => e.PictureUrl)//------------------------------------new
+            entity.Property(e => e.PictureUrl)
                 .HasMaxLength(40)
                 .HasColumnName("picture_url");
             entity.HasOne(d => d.JobPosition).WithMany(p => p.Users)
                 .HasForeignKey(d => d.JobId)
-                .HasConstraintName("users_job_positions_id_fkey");//--------------updated
+                .HasConstraintName("users_job_positions_id_fkey");
         });
 
         modelBuilder.Entity<UsersConversation>(entity =>
         {
-            entity.HasKey(e => new {e.UsersId, e.ConversationsId});//--------new
+            entity.HasKey(e => new {e.UsersId, e.ConversationsId});
             entity.ToTable("users_conversations");
             entity.Property(e => e.ConversationsId)
                 .HasColumnName("conversations_id");

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Quark_Backend.DAL;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using System.Data;
+using System.Text.RegularExpressions;
 
 namespace Quark_Backend.Controllers;
 
@@ -33,7 +33,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Check(string email)
+    public IActionResult Check(string email)
     {
         if(UserExists(email))
         {
@@ -46,27 +46,29 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Search(string? firstName, string? lastName, string? jobPosition, string? department, string? email) //properties to include; email to be removed in future
+    public async Task<IActionResult> Search(string? firstName, string? lastName, string? jobPosition, string? department, string? email)
     {
-        IQueryable<User> searchedUsers;
+        List<User> searchedUsers;
         if(firstName is null && lastName is null && jobPosition is null && department is null && email is null)
         {
             return Ok("Too few information about users to search for them."); //should be Ok response?
         }
         if(jobPosition is null)//for now applying only null arguments will return all users
         {
-            searchedUsers = _context.Users
-                .Where(u => !(firstName == null) || u.FirstName == firstName)
-                .Where(u => !(lastName == null) || u.LastName == lastName)
-                .Where(u => !(department == null) || u.JobPosition.Department.Equals(department))
-                .Where(u =>!(email == null) ||  u.Email == email);//email for test purpose only
+            searchedUsers = await _context.Users
+                .Where(u => firstName == null || u.FirstName == firstName)
+                .Where(u => lastName == null || u.LastName == lastName)
+                .Where(u => department == null || u.JobPosition.Department.Equals(department))
+                .Where(u => email == null ||  u.Email == email)//remove in future
+                .ToListAsync();
         }
         else
         {
-            searchedUsers = _context.Users
-                .Where(u => !(firstName == null) || u.FirstName == firstName)
-                .Where(u => !(lastName == null) || u.LastName == lastName)
-                .Where(u => u.JobPosition.Equals(jobPosition));
+            searchedUsers = await _context.Users
+                .Where(u => firstName == null || u.FirstName == firstName)
+                .Where(u => lastName == null || u.LastName == lastName)
+                .Where(u => u.JobPosition.Equals(jobPosition))
+                .ToListAsync();
         }
         return Ok(searchedUsers);
     }
@@ -89,14 +91,20 @@ public class UsersController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Register(string email)
     {
-
-        _context.Add(new User{Email=email});
-        // _context.Entry(user).State = EntityState.Modified;
+        //'@quark.com' has 10 letters; email column has max length 30
+        string pattern = @"^([A-Z]?|[a-z])[a-z]{0,9}\.([A-Z]?|[a-z])[a-z]{0,9}@quark\.com";
+        
+        if(Regex.IsMatch(email, pattern) == false)//check email format
+        {
+            return BadRequest("Email has wrong format.");
+        }
+        User user = new User{Email=email};
+        _context.Add(user);
         try
         {
             await _context.SaveChangesAsync();
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateException)
         {
             if (!UserExists(email))
             {
@@ -107,7 +115,7 @@ public class UsersController : ControllerBase
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
         }
-        return NoContent();
+        return StatusCode(StatusCodes.Status201Created, user);
     }    
 
 }

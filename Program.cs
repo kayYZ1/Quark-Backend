@@ -11,6 +11,30 @@ builder.Services.AddDbContext<QuarkDbContext>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddAuthorization(options =>
+{
+
+    options.AddPolicy("PermissionLevel1", policy =>
+    {
+        policy.RequireClaim("PermissionLevel", "1", "2", "3", "4");
+    });
+
+    options.AddPolicy("PermissionLevel2", policy =>
+    {
+        policy.RequireClaim("PermissionLevel", "2", "3", "4");
+    });
+
+    options.AddPolicy("PermissionLevel3", policy =>
+    {
+        policy.RequireClaim("PermissionLevel", "3", "4");
+    });
+
+    options.AddPolicy("PermissionLevel4", policy =>
+    {
+        policy.RequireClaim("PermissionLevel", "4");
+    });
+}); 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

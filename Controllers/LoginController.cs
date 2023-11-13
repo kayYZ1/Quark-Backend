@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Quark_Backend.DAL;
@@ -10,33 +11,35 @@ using System.Text;
 
 namespace Quark_Backend.Controllers
 {
+    [Authorize(Policy = "PermissionLevel1")]
     [ApiController]
     [Route("api/[controller]/[action]")]
     public class LoginController : Controller
     {
         private readonly QuarkDbContext _dbContext;
-        // Model containing Email and Password
-        private readonly LoginRequestModel _loginRequest;
-        public LoginController(QuarkDbContext context)
+        
+        private readonly LoginRequestModel _loginRequest; // Model containing Email and Password
+        public LoginController(QuarkDbContext context, LoginRequestModel loginRequest)
         {
             _dbContext = context;
-            _loginRequest = new LoginRequestModel(); 
+            _loginRequest = loginRequest;
         }
-        // Token generation for authentication
-        public string GenerateToken(User user)
+        
+        public string GenerateToken(User user) // Token generation for authorization purposes
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("SecretKeyTest"));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("5iq-Very-Long-Secret-Key-For-Authorization-Purposes"));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
         new Claim(JwtRegisteredClaimNames.Sub, user.Email),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new Claim("PermissionLevel", user.PermissionLevel.ToString()),
     };
 
             var token = new JwtSecurityToken(
-                "IssuerTest",
-                "AudienceTest",
+                "QuarkApp",
+                "User",
                 claims,
                 expires: DateTime.UtcNow.AddHours(8), // Set token expiration time
                 signingCredentials: credentials
@@ -65,13 +68,12 @@ namespace Quark_Backend.Controllers
             var hashedPasswordFromDatabase = user.Password; // Retrieve the hashed password from the database
             bool passwordMatch = BCrypt.Net.BCrypt.Verify(model.Password, hashedPasswordFromDatabase);
 
-            // Check if the provided password matches the stored password (without encryption)
+ 
             if (!passwordMatch)
             {
                 return Unauthorized("Invalid email or password");
             }
 
-            // Token library (e.g., JWT) to generate an authentication token
             var token = GenerateToken(user);
 
             return Ok(new { Token = token });

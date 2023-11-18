@@ -56,7 +56,7 @@ namespace Quark_Backend.Controllers
 
             // Find the user by email in the database
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-
+                
             
 
             if (user == null)

@@ -11,30 +11,29 @@ using System.Text;
 
 namespace Quark_Backend.Controllers
 {
-    [Authorize(Policy = "PermissionLevel1")]
+    //[Authorize(Policy = "PermissionLevel1")]
     [ApiController]
     [Route("api/[controller]/[action]")]
     public class LoginController : Controller
     {
         private readonly QuarkDbContext _dbContext;
         
-        private readonly LoginRequestModel _loginRequest; // Model containing Email and Password
-        public LoginController(QuarkDbContext context, LoginRequestModel loginRequest)
+      
+        public LoginController(QuarkDbContext context)
         {
             _dbContext = context;
-            _loginRequest = loginRequest;
         }
-        
-        public string GenerateToken(User user) // Token generation for authorization purposes
+        [HttpGet]
+        public string GenerateToken(string Email,string PermissionLevel) // Token generation for authorization purposes
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("5iq-Very-Long-Secret-Key-For-Authorization-Purposes"));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+        new Claim(JwtRegisteredClaimNames.Sub, Email),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        new Claim("PermissionLevel", user.PermissionLevel.ToString()),
+        new Claim("PermissionLevel", PermissionLevel.ToString()),
     };
 
             var token = new JwtSecurityToken(
@@ -51,7 +50,7 @@ namespace Quark_Backend.Controllers
 
 
 
-        [HttpPost("login")]
+        [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequestModel model)
         {
 
@@ -64,24 +63,28 @@ namespace Quark_Backend.Controllers
             {
                 return Unauthorized("Invalid email or password");
             }
-
-            var hashedPasswordFromDatabase = user.Password; // Retrieve the hashed password from the database
-            bool passwordMatch = BCrypt.Net.BCrypt.Verify(model.Password, hashedPasswordFromDatabase);
-
- 
-            if (!passwordMatch)
+            // Version for open password 
+            if (model.Password == user.Password)
+            {
+                return Ok(GenerateToken(user.Email, user.PermissionLevel.ToString()));
+            }
+            else
             {
                 return Unauthorized("Invalid email or password");
             }
+            // Version for hashed password
 
-            var token = GenerateToken(user);
 
-            return Ok(new { Token = token });
-        }
+            //var hashedPasswordFromDatabase = user.Password; // Retrieve the hashed password from the database
+            //bool passwordMatch = BCrypt.Net.BCrypt.Verify(model.Password, hashedPasswordFromDatabase);
+            //if (!passwordMatch)
+            //{
+            //   return Unauthorized("Invalid email or password");
+            //}
+            //return Ok(GenerateToken(user.Email, user.PermissionLevel.ToString()));
 
-        public IActionResult Index()
-        {
-            return View();
+
+
         }
     }
 }

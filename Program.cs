@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Quark_Backend.DAL;
+using Quark_Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,7 @@ builder.Services.AddDbContext<QuarkDbContext>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<ISecurityService, TokenGeneration>();
 
 builder.Services.AddAuthorization(options =>
 {

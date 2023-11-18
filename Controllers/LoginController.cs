@@ -8,6 +8,7 @@ using Quark_Backend.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Quark_Backend.Services;
 
 namespace Quark_Backend.Controllers
 {
@@ -17,42 +18,21 @@ namespace Quark_Backend.Controllers
     public class LoginController : Controller
     {
         private readonly QuarkDbContext _dbContext;
-        
-      
-        public LoginController(QuarkDbContext context)
+        private readonly ISecurityService _securityService;
+
+        public LoginController(QuarkDbContext context, ISecurityService securityService)
         {
             _dbContext = context;
+            _securityService = securityService;
         }
-        [HttpGet]
-        public string GenerateToken(string Email,string PermissionLevel) // Token generation for authorization purposes
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("5iq-Very-Long-Secret-Key-For-Authorization-Purposes"));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
-            {
-        new Claim(JwtRegisteredClaimNames.Sub, Email),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        new Claim("PermissionLevel", PermissionLevel.ToString()),
-    };
-
-            var token = new JwtSecurityToken(
-                "QuarkApp",
-                "User",
-                claims,
-                expires: DateTime.UtcNow.AddHours(8), // Set token expiration time
-                signingCredentials: credentials
-            );
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            return tokenHandler.WriteToken(token);
-        }
+        
 
 
 
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequestModel model)
         {
+            
 
             // Find the user by email in the database
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
@@ -66,7 +46,7 @@ namespace Quark_Backend.Controllers
             // Version for open password 
             if (model.Password == user.Password)
             {
-                return Ok(GenerateToken(user.Email, user.PermissionLevel.ToString()));
+                return Ok(_securityService.GenerateToken(user.Email, user.PermissionLevel.ToString()));
             }
             else
             {

@@ -1,9 +1,10 @@
+using Quark_Backend.DAL;
+using Quark_Backend.Models;
 using System.Collections;
 using Microsoft.AspNetCore.Mvc;
-using Quark_Backend.Models;
 using Quark_Backend.Entities;
 using Microsoft.EntityFrameworkCore;
-using Quark_Backend.DAL;
+
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -89,16 +90,16 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut]
-    public async Task<IActionResult> Register(string email)
+    public async Task<IActionResult> Register([FromBody]UserRegistrationModel userData)
     {
         //'@quark.com' has 10 letters; email column has max length 30
-        string pattern = @"^([A-Z]?|[a-z])[a-z]{0,19}\.([A-Z]?|[a-z])[a-z]{0,19}@quark\.com";
+        string pattern = @"^([A-Z]?|[a-z])[a-z]{0,19}\.([A-Z]?|[a-z])[a-z]{0,19}@gmail\.com";
         
-        if(Regex.IsMatch(email, pattern) == false)//check email format
+        if(Regex.IsMatch(userData.Email, pattern) == false)//check email format
         {
             return BadRequest("Email has wrong format.");
         }
-        User user = new User{Email=email};
+        User user = new User{Email=userData.Email, Password=userData.Password};
         _context.Add(user);
         try
         {
@@ -106,7 +107,7 @@ public class UsersController : ControllerBase
         }
         catch (DbUpdateException)
         {
-            if (!UserExists(email))
+            if (!UserExists(userData.Email))
             {
                 return NotFound();
             }

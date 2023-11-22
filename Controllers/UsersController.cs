@@ -36,7 +36,7 @@ public class UsersController : ControllerBase
     [HttpGet]
     public IActionResult Check(string email)
     {
-        if(UserExists(email))
+        if (UserExists(email))
         {
             return Ok("User exists.");
         }
@@ -50,17 +50,17 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Search(string? firstName, string? lastName, string? jobPosition, string? department, string? email)
     {
         List<User> searchedUsers;
-        if(firstName is null && lastName is null && jobPosition is null && department is null && email is null)
+        if (firstName is null && lastName is null && jobPosition is null && department is null && email is null)
         {
             return Ok("Too few information about users to search for them."); //should be Ok response?
         }
-        if(jobPosition is null)//for now applying only null arguments will return all users
+        if (jobPosition is null)//for now applying only null arguments will return all users
         {
             searchedUsers = await _context.Users
                 .Where(u => firstName == null || u.FirstName == firstName)
                 .Where(u => lastName == null || u.LastName == lastName)
                 .Where(u => department == null || u.JobPosition.Department.Equals(department))
-                .Where(u => email == null ||  u.Email == email)//remove in future
+                .Where(u => email == null || u.Email == email)//remove in future
                 .ToListAsync();
         }
         else
@@ -89,17 +89,17 @@ public class UsersController : ControllerBase
         return Ok("All users were deleted.");
     }
 
-    [HttpPut]
-    public async Task<IActionResult> Register([FromBody]UserRegistrationModel userData)
+    [HttpPost]
+    public async Task<IActionResult> Register([FromBody] UserRegistrationModel userData)
     {
         //'@quark.com' has 10 letters; email column has max length 30
         string pattern = @"^([A-Z]?|[a-z])[a-z]{0,19}\.([A-Z]?|[a-z])[a-z]{0,19}@gmail\.com";
-        
-        if(Regex.IsMatch(userData.Email, pattern) == false)//check email format
+
+        if (Regex.IsMatch(userData.Email, pattern) == false)//check email format
         {
             return BadRequest("Email has wrong format.");
         }
-        User user = new User{Email=userData.Email, Password=userData.Password};
+        User user = new User { Email = userData.Email, Password = userData.Password };
         _context.Add(user);
         try
         {
@@ -113,10 +113,10 @@ public class UsersController : ControllerBase
             }
             else
             {
-                return new StatusCodeResult(StatusCodes.Status409Conflict);
+                return BadRequest("Email already exist");
             }
         }
-        return StatusCode(StatusCodes.Status201Created, user);
-    }    
+        return Ok(user);
+    }
 
 }

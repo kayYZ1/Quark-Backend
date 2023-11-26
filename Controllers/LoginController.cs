@@ -29,18 +29,27 @@ namespace Quark_Backend.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequestModel model)
         {
             // Find the user by email in the database
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-            if (user == null)
+            var _user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (_user == null)
             {
                 return Unauthorized("Invalid email or password");
             }
             // Version for open password 
-            if (model.Password == user.Password)
+            if (model.Password == _user.Password)
             {
-                string token = _securityService.GenerateToken(user.Email, user.PermissionLevel.ToString());
-                var response = new
+                string token = _securityService.GenerateToken(_user.Email, _user.PermissionLevel.ToString());
+                var user = new
                 {
-                    user,
+                    _user.Email,
+                    _user.FirstName,
+                    _user.LastName,
+                    _user.Username,
+                    _user.SelfDescription,
+                    _user.PictureUrl
+                };
+                var response = new 
+                {
+                    user, 
                     token
                 };
                 return Ok(response);

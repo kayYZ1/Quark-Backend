@@ -25,20 +25,11 @@ namespace Quark_Backend.Controllers
             _dbContext = context;
             _securityService = securityService;
         }
-        
-
-
-
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequestModel model)
         {
-            
-
             // Find the user by email in the database
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-                
-            
-
             if (user == null)
             {
                 return Unauthorized("Invalid email or password");
@@ -46,15 +37,19 @@ namespace Quark_Backend.Controllers
             // Version for open password 
             if (model.Password == user.Password)
             {
-                return Ok(_securityService.GenerateToken(user.Email, user.PermissionLevel.ToString()));
+                string token = _securityService.GenerateToken(user.Email, user.PermissionLevel.ToString());
+                var response = new
+                {
+                    user,
+                    token
+                };
+                return Ok(response);
             }
             else
             {
                 return Unauthorized("Invalid email or password");
             }
             // Version for hashed password
-
-
             //var hashedPasswordFromDatabase = user.Password; // Retrieve the hashed password from the database
             //bool passwordMatch = BCrypt.Net.BCrypt.Verify(model.Password, hashedPasswordFromDatabase);
             //if (!passwordMatch)
@@ -62,9 +57,6 @@ namespace Quark_Backend.Controllers
             //   return Unauthorized("Invalid email or password");
             //}
             //return Ok(GenerateToken(user.Email, user.PermissionLevel.ToString()));
-
-
-
         }
     }
 }

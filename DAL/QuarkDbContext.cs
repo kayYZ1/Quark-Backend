@@ -139,7 +139,7 @@ public partial class QuarkDbContext : DbContext
                 .HasMaxLength(300)
                 .HasColumnName("self_description");
             entity.Property(e => e.PictureUrl)
-                .HasMaxLength(40)
+                .HasMaxLength(100)
                 .HasColumnName("picture_url");
             entity.HasOne(d => d.JobPosition).WithMany(p => p.Users)
                 .HasForeignKey(d => d.JobId)

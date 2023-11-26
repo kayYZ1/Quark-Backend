@@ -33,6 +33,14 @@ public class UsersController : ControllerBase
         return _context.Users.Any(u => u.Email == email);
     }
 
+    static string GenerateUsername(string firstName, string lastName)
+    {
+        string firstPart = firstName.Substring(0, Math.Min(3, firstName.Length));
+        string lastPart = lastName.Substring(Math.Max(0, lastName.Length - 3));
+
+        return firstPart + lastPart;
+    }
+
     [HttpGet]
     public IActionResult Check(string email)
     {
@@ -87,6 +95,39 @@ public class UsersController : ControllerBase
             throw;
         }
         return Ok("All users were deleted.");
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateProfile([FromBody] UserInfoModel userData)
+    {
+        var _user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userData.Email);
+        if (_user == null)
+        {
+            return Unauthorized("User not found");
+        }
+        _user.FirstName = userData.FirstName;
+        _user.LastName = userData.LastName;
+        _user.SelfDescription = userData.SelfDescription;
+        _user.PictureUrl = userData.PictureUrl;
+        _user.Username = GenerateUsername(_user.FirstName, _user.LastName)
+        var user = new
+        {
+            _user.Email,
+            _user.FirstName,
+            _user.LastName,
+            _user.Username,
+            _user.SelfDescription,
+            _user.PictureUrl
+        };
+        try
+        {
+            await _context.SaveChangesAsync();
+            return Ok(user);
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest("Update error");
+        }
     }
 
     [HttpPost]

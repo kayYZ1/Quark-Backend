@@ -109,7 +109,7 @@ public class UsersController : ControllerBase
         _user.LastName = userData.LastName;
         _user.SelfDescription = userData.SelfDescription;
         _user.PictureUrl = userData.PictureUrl;
-        _user.Username = GenerateUsername(_user.FirstName, _user.LastName)
+        _user.Username = GenerateUsername(_user.FirstName, _user.LastName);
         var user = new
         {
             _user.Email,

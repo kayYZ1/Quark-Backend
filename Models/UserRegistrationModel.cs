@@ -2,6 +2,6 @@ namespace Quark_Backend.Models;
 
 public class UserRegistrationModel
 {
-    public string Email{get;set;}
-    public string Password{get;set;}
+    public required string Email { get; set; }
+    public required string Password { get; set; }
 }

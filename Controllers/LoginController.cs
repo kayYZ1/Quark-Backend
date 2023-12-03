@@ -12,7 +12,6 @@ using Quark_Backend.Services;
 
 namespace Quark_Backend.Controllers
 {
-    //[Authorize(Policy = "PermissionLevel1")]
     [ApiController]
     [Route("api/[controller]/[action]")]
     public class LoginController : Controller

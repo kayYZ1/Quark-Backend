@@ -55,7 +55,55 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Search(string? firstName, string? lastName, string? jobPosition, string? department, string? email)
+    public async Task<IActionResult> Search(string searchPhrase)
+    {
+        List<User> users;
+        var filteredUsers = new List<User>();
+        string pattern;
+        string[] keywords = searchPhrase.Split(' ');
+        users = await _context.Users.ToListAsync();
+        if(keywords.Length == 1) //searching for "usernames" that have form of concatenated not-full names and surnames - which also guaranties that if the only keyword is complete name of user, that user will be included
+        {
+            RegexOptions options = RegexOptions.IgnoreCase;
+            pattern = $"{keywords.First()}[a-z]*";
+            foreach (var user in users)
+            {
+                if(user.Username == null) continue;
+                var username = user.Username;
+                if(Regex.IsMatch(username, pattern, options))
+                    filteredUsers.Add(user);
+            }
+        }
+        //2 or more keywords
+        //assumption that if there is more than one keyword, only the last is treated like it can be "incomplete"
+        /* planned behaviour: 
+        case1:
+            searchPhrase: adam wa
+            potentially searched users:
+                adam waleń
+                adam wachlarz
+        case2:
+            searchPhrase: ada wa
+            potentially searched users:
+                ada wawrzyńska
+                ada wartownik
+        case3:
+            searchedString: ada
+            potentially searched users:
+                adawal423 (adam waleń)
+                adawac122 (adam wachlarz)
+                adawaw345 (ada wawrzyńska)
+                adawar294 (ada wartownik)
+        */
+        //combinations: treat 1st keyword as firstName and surname and second too
+        
+
+
+        return Ok();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DetailedSearch(string? firstName, string? lastName, string? jobPosition, string? department, string? email)
     {
         List<User> searchedUsers;
         if (firstName is null && lastName is null && jobPosition is null && department is null && email is null)

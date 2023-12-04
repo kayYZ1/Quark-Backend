@@ -57,25 +57,6 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Search(string searchPhrase)
     {
-        List<User> users;
-        var filteredUsers = new List<User>();
-        string pattern;
-        string[] keywords = searchPhrase.Split(' ');
-        users = await _context.Users.ToListAsync();
-        if(keywords.Length == 1) //searching for "usernames" that have form of concatenated not-full names and surnames - which also guaranties that if the only keyword is complete name of user, that user will be included
-        {
-            RegexOptions options = RegexOptions.IgnoreCase;
-            pattern = $"{keywords.First()}[a-z]*";
-            foreach (var user in users)
-            {
-                if(user.Username == null) continue;
-                var username = user.Username;
-                if(Regex.IsMatch(username, pattern, options))
-                    filteredUsers.Add(user);
-            }
-        }
-        //2 or more keywords
-        //assumption that if there is more than one keyword, only the last is treated like it can be "incomplete"
         /* planned behaviour: 
         case1:
             searchPhrase: adam wa
@@ -90,16 +71,89 @@ public class UsersController : ControllerBase
         case3:
             searchedString: ada
             potentially searched users:
+            <by name>
+                adam (wawrzyński)
+            <by surname>
+                adamczyk [krzysztof]
+            <by username>
                 adawal423 (adam waleń)
                 adawac122 (adam wachlarz)
                 adawaw345 (ada wawrzyńska)
                 adawar294 (ada wartownik)
         */
-        //combinations: treat 1st keyword as firstName and surname and second too
-        
+        List<User> users;
+        var filteredUsers = new List<User>();
+        string[] keywords = searchPhrase.Split(' ');
+        users = await _context.Users.ToListAsync();
+        RegexOptions options = RegexOptions.IgnoreCase;
+        if(keywords.Length == 1)//only case where there is searching for username 
+        {
 
-
-        return Ok();
+            var keyword = keywords.First();
+            if(keyword.Length <= 3)
+            {
+                string pattern = $"{keyword}[a-z]*";
+                foreach (var user in users)
+                {  
+                    if(Regex.IsMatch(user.Username, pattern, options) ||
+                       Regex.IsMatch(user.LastName, pattern, options))
+                        filteredUsers.Add(user);
+                }
+            }
+            else // > 3
+            {
+                string pattern = $"{keyword}[a-z]*";
+                foreach (var user in users)
+                {
+                    int loginFirstPartLength = 3; //use elsewhere in future?
+                    int loginSecondPartLength = 3;
+                    bool shouldMatchAgainstFirstName = true;
+                    bool shouldMatchAgainstLastName = true;
+                    if(user.Username.Length < 6)
+                    {
+                        if(user.FirstName.Length < 3)
+                        {
+                            loginFirstPartLength = user.FirstName.Length;
+                            if(keyword.Length > loginFirstPartLength)//change to keyword.Length > user.FirstName.Length?
+                                shouldMatchAgainstFirstName = false;
+                        }
+                        if(user.LastName.Length < 3)
+                        {
+                            loginSecondPartLength = user.LastName.Length;
+                            if(keyword.Length > loginSecondPartLength)
+                                shouldMatchAgainstLastName = false;
+                        }
+                    }
+                    if(Regex.IsMatch(user.Username, pattern, options) ||
+                       shouldMatchAgainstFirstName  && Regex.IsMatch(user.FirstName, pattern, options) ||
+                       shouldMatchAgainstLastName && Regex.IsMatch(user.LastName, pattern, options))
+                    {
+                        filteredUsers.Add(user);
+                    }
+                        
+                }
+            }
+        }
+        else // keywords.Length > 1
+        {
+            /*
+            assumption that if there is more than one keyword, only the last is treated like it can be "incomplete". Searching for usernames is ommited, because if there is second keyword it means that first is either first name or last name and so second shouldn't be username because username alone is sufficient to search for user by both first name and last name (because username contains part of name and surname)
+            */
+            Array.Resize(ref keywords, 2); 
+            string pattern = $"{keywords[0]} {keywords[1]}[a-z]*";
+            foreach (var user in users)
+            {
+                // if(keywords[0] == user.FirstName) ;
+                var stringToMatchA = $"{user.FirstName} {user.LastName}";//combinations
+                var stringToMatchB = $"{user.LastName} {user.FirstName}";
+                if(Regex.IsMatch(stringToMatchA, pattern, options) ||
+                   Regex.IsMatch(stringToMatchB, pattern, options))
+                {
+                    filteredUsers.Add(user);
+                }
+            }
+        }
+        return Ok(filteredUsers);
     }
 
     [HttpGet]
@@ -110,7 +164,7 @@ public class UsersController : ControllerBase
         {
             return Ok("Too few information about users to search for them."); //should be Ok response?
         }
-        if (jobPosition is null)//for now applying only null arguments will return all users
+        if (jobPosition is null)//if searched feature (like firstName) is null then it does not filter by this feature
         {
             searchedUsers = await _context.Users
                 .Where(u => firstName == null || u.FirstName == firstName)
@@ -181,7 +235,7 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Register([FromBody] UserRegistrationModel userData)
     {
-        //'@quark.com' has 10 letters; email column has max length 30
+        //'@gmail.com' has 10 letters; email column has max length 50
         string pattern = @"^([A-Z]?|[a-z])[a-z]{0,19}\.([A-Z]?|[a-z])[a-z]{0,19}@gmail\.com";
 
         if (Regex.IsMatch(userData.Email, pattern) == false)//check email format

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Quark_Backend.Controllers;
 
@@ -33,10 +34,11 @@ public class UsersController : ControllerBase
         return _context.Users.Any(u => u.Email == email);
     }
 
-    static string GenerateUsername(string firstName, string lastName)
+    [HttpGet]
+    public string GenerateUsername(string firstName, string lastName) //in future remove [HttpGet] and make private
     {
         string firstPart = firstName.Substring(0, Math.Min(3, firstName.Length));
-        string lastPart = lastName.Substring(Math.Max(0, lastName.Length - 3));
+        string lastPart = lastName.Substring(0, Math.Min(3, lastName.Length));
 
         return firstPart + lastPart;
     }
@@ -202,6 +204,10 @@ public class UsersController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> UpdateProfile([FromBody] UserInfoModel userData)
     {
+        //problem if two departments have job with the same name; could be fixed if department name would be included in UserInfoModel
+        var jobReference = await _context.JobPositions.FirstAsync(j => j.Name == userData.JobPosition);//TODO: catch InvalidOperationException (when FirstAsync returns no elements)
+        if(jobReference is null && (userData.JobPosition.IsNullOrEmpty() == false)) 
+            return BadRequest("There are no job positions with that name");
         var _user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userData.Email);
         if (_user == null)
         {
@@ -211,6 +217,7 @@ public class UsersController : ControllerBase
         _user.LastName = userData.LastName;
         _user.SelfDescription = userData.SelfDescription;
         _user.PictureUrl = userData.PictureUrl;
+        _user.JobPosition = jobReference;
         _user.Username = GenerateUsername(_user.FirstName, _user.LastName);
         var user = new
         {
@@ -224,12 +231,12 @@ public class UsersController : ControllerBase
         try
         {
             await _context.SaveChangesAsync();
-            return Ok(user);
         }
         catch (DbUpdateException)
         {
             return BadRequest("Update error");
         }
+        return Ok(user);
     }
 
     [HttpPost]

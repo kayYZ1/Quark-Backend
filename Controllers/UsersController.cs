@@ -226,6 +226,7 @@ public class UsersController : ControllerBase
             _user.LastName,
             _user.Username,
             _user.SelfDescription,
+            _user.JobPosition,
             _user.PictureUrl
         };
         try

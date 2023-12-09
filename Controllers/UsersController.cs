@@ -270,4 +270,36 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
 
+    [HttpPost]
+    public async Task<IActionResult> AddAnnouncement([FromBody] AnnouncementModel _announcement)
+    {
+        var userRef = await _context.Users.FirstAsync(u => u.Email == _announcement.Email);
+        var userFirstName = userRef.FirstName;
+        var userLastName = userRef.LastName;
+        var userPictureUrl = userRef.PictureUrl;
+        var response = new 
+        {
+            _announcement.Title,
+            _announcement.Content,
+            _announcement.Time,
+            userFirstName,
+            userLastName,
+            userPictureUrl
+        };
+
+        Announcement announcement = new Announcement 
+        { Title = _announcement.Title, Content = _announcement.Content, Time = _announcement.Time, UserId = userRef.Id };
+        
+        _context.Add(announcement);
+        try
+        {
+            await _context.SaveChangesAsync();
+        } 
+        catch (DbUpdateException)
+        {
+            return BadRequest("Error while adding announcement");
+        }
+
+        return Ok(response);
+    }
 }

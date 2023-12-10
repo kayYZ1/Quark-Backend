@@ -220,6 +220,28 @@ public class UsersController : ControllerBase
         return Ok("All users were deleted.");
     }
 
+    [HttpGet]
+    public async Task<ActionResult<List<object>>> GetUsers()
+    {
+        List<User> _users = await _context.Users.ToListAsync();
+        var users = new List<object>();
+
+        foreach (User user in _users)
+        {
+            var data = new
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PictureUrl = user.PictureUrl
+            };
+
+            users.Add(data);
+        }
+        return users;
+    }
+
     [HttpPut]
     public async Task<IActionResult> UpdateProfile([FromBody] UserInfoModel userData)
     {

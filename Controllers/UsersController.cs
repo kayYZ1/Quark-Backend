@@ -1,18 +1,15 @@
-using Quark_Backend.DAL;
-using Quark_Backend.Models;
 using System.Collections;
-using Microsoft.AspNetCore.Mvc;
-using Quark_Backend.Entities;
-using Microsoft.EntityFrameworkCore;
-
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Quark_Backend.DAL;
+using Quark_Backend.Entities;
+using Quark_Backend.Models;
 
 namespace Quark_Backend.Controllers;
-
-
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -29,6 +26,7 @@ public class UsersController : ControllerBase
     {
         return _context.Users.Any(u => u.Id == id);
     }
+
     private bool UserExists(string email)
     {
         return _context.Users.Any(u => u.Email == email);
@@ -59,7 +57,7 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Search(string searchPhrase)
     {
-        /* planned behaviour: 
+        /* planned behaviour:
         case1:
             searchPhrase: adam wa
             potentially searched users:
@@ -88,17 +86,18 @@ public class UsersController : ControllerBase
         string[] keywords = searchPhrase.Split(' ');
         users = await _context.Users.ToListAsync();
         RegexOptions options = RegexOptions.IgnoreCase;
-        if(keywords.Length == 1)//only case where there is searching for username 
+        if (keywords.Length == 1) //only case where there is searching for username
         {
-
             var keyword = keywords.First();
-            if(keyword.Length <= 3)
+            if (keyword.Length <= 3)
             {
                 string pattern = $"{keyword}[a-z]*";
                 foreach (var user in users)
-                {  
-                    if(Regex.IsMatch(user.Username, pattern, options) ||
-                       Regex.IsMatch(user.LastName, pattern, options))
+                {
+                    if (
+                        Regex.IsMatch(user.Username, pattern, options)
+                        || Regex.IsMatch(user.LastName, pattern, options)
+                    )
                         filteredUsers.Add(user);
                 }
             }
@@ -111,28 +110,31 @@ public class UsersController : ControllerBase
                     int loginSecondPartLength = 3;
                     bool shouldMatchAgainstFirstName = true;
                     bool shouldMatchAgainstLastName = true;
-                    if(user.Username.Length < 6)
+                    if (user.Username.Length < 6)
                     {
-                        if(user.FirstName.Length < 3)
+                        if (user.FirstName.Length < 3)
                         {
                             loginFirstPartLength = user.FirstName.Length;
-                            if(keyword.Length > loginFirstPartLength)//change to keyword.Length > user.FirstName.Length?
+                            if (keyword.Length > loginFirstPartLength) //change to keyword.Length > user.FirstName.Length?
                                 shouldMatchAgainstFirstName = false;
                         }
-                        if(user.LastName.Length < 3)
+                        if (user.LastName.Length < 3)
                         {
                             loginSecondPartLength = user.LastName.Length;
-                            if(keyword.Length > loginSecondPartLength)
+                            if (keyword.Length > loginSecondPartLength)
                                 shouldMatchAgainstLastName = false;
                         }
                     }
-                    if(Regex.IsMatch(user.Username, pattern, options) ||
-                       shouldMatchAgainstFirstName  && Regex.IsMatch(user.FirstName, pattern, options) ||
-                       shouldMatchAgainstLastName && Regex.IsMatch(user.LastName, pattern, options))
+                    if (
+                        Regex.IsMatch(user.Username, pattern, options)
+                        || shouldMatchAgainstFirstName
+                            && Regex.IsMatch(user.FirstName, pattern, options)
+                        || shouldMatchAgainstLastName
+                            && Regex.IsMatch(user.LastName, pattern, options)
+                    )
                     {
                         filteredUsers.Add(user);
                     }
-                        
                 }
             }
         }
@@ -141,15 +143,17 @@ public class UsersController : ControllerBase
             /*
             assumption that if there is more than one keyword, only the last is treated like it can be "incomplete". Searching for usernames is ommited, because if there is second keyword it means that first is either first name or last name and so second shouldn't be username because username alone is sufficient to search for user by both first name and last name (because username contains part of name and surname)
             */
-            Array.Resize(ref keywords, 2); 
+            Array.Resize(ref keywords, 2);
             string pattern = $"{keywords[0]} {keywords[1]}[a-z]*";
             foreach (var user in users)
             {
                 // if(keywords[0] == user.FirstName) ;
-                var stringToMatchA = $"{user.FirstName} {user.LastName}";//combinations
+                var stringToMatchA = $"{user.FirstName} {user.LastName}"; //combinations
                 var stringToMatchB = $"{user.LastName} {user.FirstName}";
-                if(Regex.IsMatch(stringToMatchA, pattern, options) ||
-                   Regex.IsMatch(stringToMatchB, pattern, options))
+                if (
+                    Regex.IsMatch(stringToMatchA, pattern, options)
+                    || Regex.IsMatch(stringToMatchB, pattern, options)
+                )
                 {
                     filteredUsers.Add(user);
                 }
@@ -159,25 +163,39 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> DetailedSearch(string? firstName, string? lastName, string? jobPosition, string? department, string? email)
+    public async Task<IActionResult> DetailedSearch(
+        string? firstName,
+        string? lastName,
+        string? jobPosition,
+        string? department,
+        string? email
+    )
     {
         List<User> searchedUsers;
-        if (firstName is null && lastName is null && jobPosition is null && department is null && email is null)
+        if (
+            firstName is null
+            && lastName is null
+            && jobPosition is null
+            && department is null
+            && email is null
+        )
         {
             return Ok("Too few information about users to search for them."); //should be Ok response?
         }
-        if (jobPosition is null)//if searched feature (like firstName) is null then it does not filter by this feature
+        if (jobPosition is null) //if searched feature (like firstName) is null then it does not filter by this feature
         {
-            searchedUsers = await _context.Users
+            searchedUsers = await _context
+                .Users
                 .Where(u => firstName == null || u.FirstName == firstName)
                 .Where(u => lastName == null || u.LastName == lastName)
                 .Where(u => department == null || u.JobPosition.Department.Equals(department))
-                .Where(u => email == null || u.Email == email)//remove in future
+                .Where(u => email == null || u.Email == email) //remove in future
                 .ToListAsync();
         }
         else
         {
-            searchedUsers = await _context.Users
+            searchedUsers = await _context
+                .Users
                 .Where(u => firstName == null || u.FirstName == firstName)
                 .Where(u => lastName == null || u.LastName == lastName)
                 .Where(u => u.JobPosition.Equals(jobPosition))
@@ -185,6 +203,7 @@ public class UsersController : ControllerBase
         }
         return Ok(searchedUsers);
     }
+
     // for testing purposes only - to be removed in future
     [HttpPost]
     public async Task<IActionResult> Clear()
@@ -246,7 +265,7 @@ public class UsersController : ControllerBase
         //'@gmail.com' has 10 letters; email column has max length 50
         string pattern = @"^([A-Z]?|[a-z])[a-z]{0,19}\.([A-Z]?|[a-z])[a-z]{0,19}@gmail\.com";
 
-        if (Regex.IsMatch(userData.Email, pattern) == false)//check email format
+        if (Regex.IsMatch(userData.Email, pattern) == false) //check email format
         {
             return BadRequest("Email has wrong format.");
         }
@@ -268,38 +287,5 @@ public class UsersController : ControllerBase
             }
         }
         return Ok(user);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> AddAnnouncement([FromBody] AnnouncementModel _announcement)
-    {
-        var userRef = await _context.Users.FirstAsync(u => u.Email == _announcement.Email);
-        var userFirstName = userRef.FirstName;
-        var userLastName = userRef.LastName;
-        var userPictureUrl = userRef.PictureUrl;
-        var response = new 
-        {
-            _announcement.Title,
-            _announcement.Content,
-            _announcement.Time,
-            userFirstName,
-            userLastName,
-            userPictureUrl
-        };
-
-        Announcement announcement = new Announcement 
-        { Title = _announcement.Title, Content = _announcement.Content, Time = _announcement.Time, UserId = userRef.Id };
-        
-        _context.Add(announcement);
-        try
-        {
-            await _context.SaveChangesAsync();
-        } 
-        catch (DbUpdateException)
-        {
-            return BadRequest("Error while adding announcement");
-        }
-
-        return Ok(response);
     }
 }

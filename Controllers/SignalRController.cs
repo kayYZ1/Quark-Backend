@@ -43,7 +43,7 @@ namespace Quark_Backend.Controllers
             }
 
         }
-        [HttpGet]
+        [HttpPost]
         [Route("PushMessage")]
 
         public async Task<IActionResult> PushMessage(String message)

@@ -1,16 +1,18 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Quark_Backend.Entities;
+
 namespace Quark_Backend.Hubs
 {
     public class QuarkHub : Hub
     {
-        public void BroadcastUser(User user)
+        public async Task BroadcastUser(User user)
         {
-            Clients.All.SendAsync("ReceiveUser", user);
+            await Clients.All.SendAsync("ReceiveUser", user);
         }
-        public void BroadcastMessage(string message)
+
+        public async Task PushMessage(string message)
         {
-            Clients.All.SendAsync("ReceiveMessage", message);
+            await Clients.All.SendAsync("ReceiveMessage", message);
         }
     }
 }

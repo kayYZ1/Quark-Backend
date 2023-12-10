@@ -7,7 +7,7 @@ using Quark_Backend.Models;
 
 namespace Quark_Backend.Controllers
 {
-    [Authorize(Policy = "PermissionLevel2")]
+    //[Authorize(Policy = "PermissionLevel5")]
     [ApiController]
     [Route("api/[controller]/[action]")]
     public class AdminController : Controller
@@ -22,10 +22,10 @@ namespace Quark_Backend.Controllers
         // User Management by admin
 
 
-        [HttpDelete("/api/users/{id}")]
-        public IActionResult DeleteUser(int Id)
+        [HttpDelete("/api/users/{Id}")] 
+        public async Task<IActionResult> DeleteUser(int Id)
         {
-            var userToDelete = _dbContext.Users.Find(Id);
+            var userToDelete = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == Id);
 
             if (userToDelete == null)
             {
@@ -37,15 +37,15 @@ namespace Quark_Backend.Controllers
 
             return Ok($"User '{userToDelete.FirstName} {userToDelete.LastName}' deleted successfully");
         }
-        [HttpPost]
+        [HttpPost("/api/users/{Id}")]
 
-        public IActionResult EditUser([FromBody] UserEdit userEdit)
+        public IActionResult EditUser(int Id, [FromBody] UserEdit userEdit)
         {
-            var user = _dbContext.Users.FirstOrDefault(u => u.Id == userEdit.Id);
+            var user = _dbContext.Users.FirstOrDefault(u => u.Id == Id);
 
             if (user == null)
             {
-                return NotFound($"User with ID {userEdit.Id} not found");
+                return NotFound($"User with ID {Id} not found");
             }
 
 
@@ -77,11 +77,11 @@ namespace Quark_Backend.Controllers
             try
             {
                 _dbContext.SaveChanges();
-                return Ok($"User with ID {userEdit.Id} updated successfully");
+                return Ok($"User with ID {Id} updated successfully");
             }
             catch (DbUpdateException)
             {
-                return BadRequest($"Error updating user with ID {userEdit.Id}");
+                return BadRequest($"Error updating user with ID {Id}");
             }
         }
 

@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Quark_Backend.DAL;
 using Quark_Backend.Entities;
 using Quark_Backend.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using Quark_Backend.Services;
 
 namespace Quark_Backend.Controllers
@@ -25,6 +25,7 @@ namespace Quark_Backend.Controllers
             _dbContext = context;
             _securityService = securityService;
         }
+
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequestModel model)
         {
@@ -34,10 +35,13 @@ namespace Quark_Backend.Controllers
             {
                 return Unauthorized("Invalid email or password");
             }
-            // Version for open password 
+            // Version for open password
             if (model.Password == _user.Password)
             {
-                string token = _securityService.GenerateToken(_user.Email, _user.PermissionLevel.ToString());
+                string token = _securityService.GenerateToken(
+                    _user.Email,
+                    _user.PermissionLevel.ToString()
+                );
                 var user = new
                 {
                     _user.Email,
@@ -47,11 +51,7 @@ namespace Quark_Backend.Controllers
                     _user.SelfDescription,
                     _user.PictureUrl
                 };
-                var response = new 
-                {
-                    user, 
-                    token
-                };
+                var response = new { user, token };
                 return Ok(response);
             }
             else

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Quark_Backend.DAL;
+using Quark_Backend.Hubs;
 using Quark_Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ builder.Services.AddDbContext<QuarkDbContext>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ISecurityService, TokenGeneration>();
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -57,9 +59,12 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
         options.RoutePrefix = string.Empty;
     });
+    
 }
 
 
+
+app.MapHub<QuarkHub>("/QuarkHub");
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

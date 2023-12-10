@@ -246,15 +246,8 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> UpdateProfile([FromBody] UserInfoModel userData)
     {
         //problem if two departments have job with the same name; could be fixed if department name would be included in UserInfoModel
-<<<<<<< HEAD
         var jobReference = await _context.JobPositions.Include(j => j.Department).FirstAsync(j => j.Name == userData.JobPosition);//TODO: catch InvalidOperationException (when FirstAsync returns no elements)
         if(jobReference is null && (userData.JobPosition.IsNullOrEmpty() == false)) 
-=======
-        var jobReference = await _context
-            .JobPositions
-            .FirstAsync(j => j.Name == userData.JobPosition); //TODO: catch InvalidOperationException (when FirstAsync returns no elements)
-        if (jobReference is null && (userData.JobPosition.IsNullOrEmpty() == false))
->>>>>>> d8b507ad3ea8983258d028f5675336339d783842
             return BadRequest("There are no job positions with that name");
         var _user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userData.Email);
         if (_user == null)

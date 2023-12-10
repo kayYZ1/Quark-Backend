@@ -44,8 +44,8 @@ public partial class QuarkDbContext : DbContext
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
-            entity.Property(e => e.Title).HasColumnName("title");
-            entity.Property(e => e.Content).HasColumnName("content");
+            entity.Property(e => e.Title).HasColumnName("title").HasMaxLength(30);
+            entity.Property(e => e.Content).HasColumnName("content").HasMaxLength(150);
             entity.Property(e => e.Time).HasColumnName("time");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 

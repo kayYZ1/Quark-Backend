@@ -27,4 +27,5 @@ public partial class User
 
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
     public virtual ICollection<Conversation> Conversations { get; } = new List<Conversation>();
+    public virtual ICollection<Announcement> Announcements { get; } = new List<Announcement>();
 }

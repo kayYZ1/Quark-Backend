@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Quark_Backend.DAL;
@@ -11,9 +12,11 @@ using Quark_Backend.DAL;
 namespace Quark_Backend.MigrationHistory
 {
     [DbContext(typeof(QuarkDbContext))]
-    partial class QuarkDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231208180532_AnnouncementsAddTime1")]
+    partial class AnnouncementsAddTime1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,8 +41,7 @@ namespace Quark_Backend.MigrationHistory
 
                     b.Property<string>("Time")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("time");
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()

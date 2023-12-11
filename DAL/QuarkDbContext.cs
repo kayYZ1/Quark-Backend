@@ -16,6 +16,8 @@ public partial class QuarkDbContext : DbContext
     {
     }
 
+    public virtual DbSet<Announcement> Announcements {get; set;}
+
     public virtual DbSet<Conversation> Conversations { get; set; }
 
     public virtual DbSet<Department> Departments { get; set; }
@@ -33,6 +35,26 @@ public partial class QuarkDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Announcement>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("announcements_pkey");
+
+            entity.ToTable("announcements");
+
+            entity.Property(e => e.Id)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("id");
+            entity.Property(e => e.Title).HasColumnName("title").HasMaxLength(30);
+            entity.Property(e => e.Content).HasColumnName("content").HasMaxLength(150);
+            entity.Property(e => e.Time).HasColumnName("time");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Announcements)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("announcements_user_id_fkey");
+        });
+
         modelBuilder.Entity<Conversation>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("conversations_pkey");

@@ -19,6 +19,7 @@ public partial class QuarkDbContext : DbContext
     public virtual DbSet<Announcement> Announcements {get; set;}
 
     public virtual DbSet<Conversation> Conversations { get; set; }
+    public virtual DbSet<Connection> Connections { get; set; }
 
     public virtual DbSet<Department> Departments { get; set; }
 
@@ -58,20 +59,39 @@ public partial class QuarkDbContext : DbContext
         modelBuilder.Entity<Conversation>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("conversations_pkey");
-
+            entity.HasIndex(e => e.Name).IsUnique(true);
             entity.ToTable("conversations");
-
+            
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasColumnName("name").HasMaxLength(40);
             entity.HasMany(e => e.Users).WithMany(e => e.Conversations)
                 .UsingEntity<UsersConversation>();
         });
+        modelBuilder.Entity<Connection>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("connections_pkey");
 
+            entity.ToTable("connections");
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id");
+            entity.Property(e => e.UserAgent)
+                .HasColumnName("user_agent");
+            entity.Property(e => e.State)
+                .HasColumnName("state");
+            entity.Property(e => e.UserId).
+                HasColumnName("user_id");
+            entity.HasOne(c => c.User).WithMany(u => u.Connections)
+                .HasForeignKey(e => e.UserId)
+                .HasConstraintName("connections_users_id_fkey");
+        });
         modelBuilder.Entity<Department>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("departments_pkey");
-
+            entity.HasIndex(e => e.Name).IsUnique(true);
             entity.ToTable("departments");
 
             entity.Property(e => e.Id)
@@ -163,8 +183,8 @@ public partial class QuarkDbContext : DbContext
             entity.Property(e => e.PictureUrl)
                 .HasMaxLength(100)
                 .HasColumnName("picture_url");
-            entity.HasOne(d => d.JobPosition).WithMany(p => p.Users)
-                .HasForeignKey(d => d.JobId)
+            entity.HasOne(u => u.JobPosition).WithMany(p => p.Users)
+                .HasForeignKey(u => u.JobId)
                 .HasConstraintName("users_job_positions_id_fkey");
         });
 

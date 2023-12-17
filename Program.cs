@@ -87,6 +87,7 @@ if (app.Environment.IsDevelopment())
 app.MapHub<QuarkHub>("/QuarkHub");
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseCors();

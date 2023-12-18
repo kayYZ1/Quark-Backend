@@ -1,6 +1,7 @@
 ﻿using Quark_Backend.DAL;
 using Quark_Backend.Entities;
 using Quark_Backend.Utilities;
+using Quark_Backend.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -51,6 +52,17 @@ namespace Quark_Backend.Hubs
             - StartPrivateConversation (check if not started). Probably AddToConversation will be enough.
 
         */
+
+
+        // public async Task<Conversation> OpenPrivateConversation(string requestingUser, string otherUser)
+        // {
+        //     using(var db = new QuarkDbContext())
+        //     {
+        //         db.Conversations.Include(c => c.Messages).Include(c => c.Users)
+        //             .Where(c => c.Users.Count == 2)
+        //             .Where(c => c.Users.)
+        //     }
+        // }
 
         //should initiating new conversation be implemented in seperated method?
         public async Task AddToConversation(string conversationName, string username)

@@ -1,16 +1,32 @@
 using System.Linq;
 using System.Collections;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
+using Quark_Backend.DAL;
+using Quark_Backend.Entities;
 
 namespace Quark_Backend.Utilities;
 public static class NameGenerator
 {
     private static Random random = new Random();
-    public static string GenerateUsername(string firstName, string lastName)
+    public async static Task<string> GenerateUsername(string firstName, string lastName)
     {
-        string firstPart = firstName.Substring(0, Math.Min(3, firstName.Length));
-        string lastPart = lastName.Substring(0, Math.Min(3, lastName.Length));
-        return firstPart + lastPart;
+        string tempUsername;
+        string digitsPart;
+        User user;
+        string firstNamePart = firstName.Substring(0, Math.Min(3, firstName.Length));
+        string lastNamePart = lastName.Substring(0, Math.Min(3, lastName.Length));
+        using(var db = new QuarkDbContext())
+        {
+            do
+            {
+                digitsPart = random.Next(10000).ToString();//0-9999
+                tempUsername = firstNamePart + lastNamePart + digitsPart;
+                user = await db.Users.FirstAsync(u => u.Username == tempUsername);
+                if(user == null) break;
+            } while(true);
+        }
+        return tempUsername;
     }
     public static string GenerateRandomConversationName()
     {

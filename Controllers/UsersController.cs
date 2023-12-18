@@ -214,6 +214,44 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
+    public async Task<ActionResult<BasicConversationModel>> GetConversations(int ownedId)
+    {
+        var user = await _context.Users.Include(u => u.Conversations).
+                                        FirstAsync(u => u.Id == ownedId);
+        var conversationModel = new BasicConversationModel() 
+        {
+            Conversations = new List<BasicConversationModel.Conversation>()
+        };
+        foreach(var conversation in user.Conversations)
+        {
+            bool isPrivate = conversation.Users.Count <= 2 ? true : false;
+            var users = new List<BasicConversationModel.User>();
+            foreach(var u in conversation.Users)
+            {
+                users.Add
+                (
+                    new BasicConversationModel.User()
+                    {
+                        Id = u.Id,
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        Username = u.Username
+                    }
+                );
+            }
+            var conversationData = new BasicConversationModel.Conversation
+            {
+                Id = conversation.Id,
+                Name = conversation.Name,
+                IsPrivate = isPrivate,
+                Users = users
+            };
+            conversationModel.Conversations.Add(conversationData);
+        }
+        return Ok(conversationModel);
+    }
+
+    [HttpGet]
     public async Task<ActionResult<List<object>>> GetUsers()
     {
         List<User> _users = await _context.Users.ToListAsync();
@@ -252,7 +290,7 @@ public class UsersController : ControllerBase
         _user.SelfDescription = userData.SelfDescription;
         _user.PictureUrl = userData.PictureUrl;
         _user.JobPosition = jobReference;
-        _user.Username = NameGenerator.GenerateUsername(_user.FirstName, _user.LastName);
+        _user.Username = await NameGenerator.GenerateUsername(_user.FirstName, _user.LastName);
         var user = new
         {
             _user.Id,

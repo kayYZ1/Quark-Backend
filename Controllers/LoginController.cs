@@ -37,7 +37,7 @@ namespace Quark_Backend.Controllers
             // Version for open password
             if (model.Password == _user.Password)
             {
-                string token = await _securityService.GenerateToken(
+                string token = _securityService.GenerateToken(
                     _user.Email,
                     _user.PermissionLevel.ToString(),
                     _user.Username

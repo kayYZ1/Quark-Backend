@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using Quark_Backend.DAL;
+﻿using Quark_Backend.DAL;
 using Quark_Backend.Entities;
+using Quark_Backend.Utilities;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -17,7 +18,7 @@ namespace Quark_Backend.Hubs
             {
                 var user = await db.Users
                     .Include(u => u.Connections)
-                    .FirstAsync(u => u.Username == Context.User.Identity.Name);//what is the value of Identity.Name? (is properly set in token generation - ClaimType.Name?)
+                    .FirstAsync(u => u.Username == Context.User.Identity.Name);//does token generation (ClaimType.Name) set Identity.Name value properly?
                 if (user == null)
                 {
                     return;
@@ -44,6 +45,71 @@ namespace Quark_Backend.Hubs
                 Groups.RemoveFromGroupAsync(Context.ConnectionId, conversation.Name);
             }
             await base.OnDisconnectedAsync(exception);
+        }
+        /*
+            potential methods:
+            - StartPrivateConversation (check if not started). Probably AddToConversation will be enough.
+
+        */
+
+        //should initiating new conversation be implemented in seperated method?
+        public async Task AddToConversation(string conversationName, string username)
+        {
+            using(var db = new QuarkDbContext())
+            {
+                var conversation = await db.Conversations.Include(c => c.Users).FirstAsync(c => c.
+                Name == conversationName);
+                if(conversation.Users.First(u => u.Username == username) != null)
+                {
+                    return;//user is already in conversation
+                }
+                var userToAdd = await db.Users.FirstAsync(u => u.Username == username);
+                var usersCount = conversation.Users.Count;
+                if(usersCount == 1) //initiating private conversation - is this case possible? how can user have conversation with only him in first place?
+                {
+
+                }
+                else if(usersCount <= 2) //create new room to prevent adding new member to existing private conversation
+                {
+                    //generate roomHash/roomName that will be possible to change into custom name
+                    string randomName;
+                    while(true)
+                    {
+                        randomName = NameGenerator.GenerateRandomConversationName();
+                        if(db.Conversations.First(c => c.Name == randomName) == null)
+                        {
+                            break;
+                        }
+                    }
+                    List<User> newConversationMembers = new List<User>(conversation.Users);
+                    newConversationMembers.Add(userToAdd);
+                    var newConversation = new Conversation
+                    {
+                        Name = randomName,
+                        Users = newConversationMembers
+                    };
+                    db.Conversations.Add(newConversation);
+                    await db.SaveChangesAsync();
+                    foreach(var user in newConversation.Users)
+                    {
+                        foreach(var connection in user.Connections)
+                        {
+                            var connectionId = connection.Id.ToString();
+                            await Groups.AddToGroupAsync(connectionId, conversation.Name);
+                        }
+                    }
+                }
+                else //it means it's already a group conversation
+                {
+                    foreach(var connection in userToAdd.Connections)
+                    {
+                        var connectionId = connection.Id.ToString();
+                        await Groups.AddToGroupAsync(connectionId, conversation.Name);
+                    }
+                    conversation.Users.Add(userToAdd);
+                    await db.SaveChangesAsync();
+                }
+            }
         }
         public async Task BroadcastUser(User user)
         {

@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Quark_Backend.DAL;
 using Quark_Backend.Entities;
 using Quark_Backend.Models;
+using Quark_Backend.Utilities;
 
 namespace Quark_Backend.Controllers;
 
@@ -32,14 +33,6 @@ public class UsersController : ControllerBase
         return _context.Users.Any(u => u.Email == email);
     }
 
-    [HttpGet]
-    public string GenerateUsername(string firstName, string lastName) //in future remove [HttpGet] and make private
-    {
-        string firstPart = firstName.Substring(0, Math.Min(3, firstName.Length));
-        string lastPart = lastName.Substring(0, Math.Min(3, lastName.Length));
-
-        return firstPart + lastPart;
-    }
 
     [HttpGet]
     public IActionResult Check(string email)
@@ -259,7 +252,7 @@ public class UsersController : ControllerBase
         _user.SelfDescription = userData.SelfDescription;
         _user.PictureUrl = userData.PictureUrl;
         _user.JobPosition = jobReference;
-        _user.Username = GenerateUsername(_user.FirstName, _user.LastName);
+        _user.Username = NameGenerator.GenerateUsername(_user.FirstName, _user.LastName);
         var user = new
         {
             _user.Id,

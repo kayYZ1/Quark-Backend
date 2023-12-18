@@ -2,6 +2,6 @@
 {
     public interface ISecurityService
     {
-        Task<string> GenerateToken(string Email, string PermissionLevel, string Username);
+        string GenerateToken(string Email, string PermissionLevel, string Username);
     }
 }

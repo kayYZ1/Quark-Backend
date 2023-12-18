@@ -11,7 +11,7 @@ namespace Quark_Backend.Services
 
     public class TokenGeneration : ISecurityService
     {
-        public async Task<string> GenerateToken(string Email, string PermissionLevel, string Username) // Token generation for authorization purposes
+        public string GenerateToken(string Email, string PermissionLevel, string Username) // Token generation for authorization purposes
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("5iq-Very-Long-Secret-Key-For-Authorization-Purposes"));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

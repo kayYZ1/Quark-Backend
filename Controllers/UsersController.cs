@@ -262,6 +262,7 @@ public class UsersController : ControllerBase
         _user.Username = GenerateUsername(_user.FirstName, _user.LastName);
         var user = new
         {
+            _user.Id,
             _user.Email,
             _user.FirstName,
             _user.LastName,

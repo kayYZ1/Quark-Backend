@@ -88,4 +88,26 @@ public class AnnouncementsController : ControllerBase
 
         return Ok(response);
     }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteAnnouncement([FromBody] AnnouncementModel _announcement)
+    {
+        var userRef = await _context.Users.FirstAsync(u => u.Email == _announcement.Email);
+        var announcement = await _context.Announcements.FirstAsync(a => a.Id == _announcement.Id);
+        if (userRef.Id != announcement.UserId)
+        {
+            return BadRequest("You are not authorized to delete this announcement");
+        }
+        _context.Remove(announcement);
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest("Error while deleting announcement");
+        }
+        return Ok();
+    }
+
 }

@@ -17,7 +17,7 @@ namespace Quark_Backend.Controllers
     public class WyszukiwanieWiad : Controller
     {
         private readonly QuarkDbContext _dbContext;
-        WyszukiwanieWiad(QuarkDbContext context)
+        public WyszukiwanieWiad(QuarkDbContext context)
         {
             _dbContext = context;
         }
@@ -28,25 +28,22 @@ namespace Quark_Backend.Controllers
             try
             {
                 var query = _dbContext.Messages.AsQueryable();
+                query = query.Where(m => m.ConversationId == szukanaWiadomosc.ConversationId);
+
 
                 if (!string.IsNullOrEmpty(szukanaWiadomosc.FragmentWiadomosci))
                 {
-                    query = query.Where(m => m.Text.Contains(szukanaWiadomosc.FragmentWiadomosci));
-                }
-
-                if (szukanaWiadomosc.ConversationId.HasValue) // Zrobic konwersacje wymagana 
-                {
-                    query = query.Where(m => m.ConversationId == szukanaWiadomosc.ConversationId.Value);
+                    query = query.Where(m => m.Text.ToLower().Contains(szukanaWiadomosc.FragmentWiadomosci.ToLower()));
                 }
 
                 if (szukanaWiadomosc.UserId.HasValue)
                 {
-                    query = query.Where(m => m.UserId == szukanaWiadomosc.UserId.Value);
+                    query = query.Where(m => m.UserId == szukanaWiadomosc.UserId);
                 }
 
                 if (szukanaWiadomosc.SentDate.HasValue)
                 {
-                    query = query.Where(m => m.SentDate == szukanaWiadomosc.SentDate.Value);
+                    query = query.Where(m => m.SentDate == szukanaWiadomosc.SentDate);
                 }
 
                 var wyszukaneWiadomosci = await query.ToListAsync();

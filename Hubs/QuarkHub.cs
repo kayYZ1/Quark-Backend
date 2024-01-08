@@ -10,9 +10,9 @@ namespace Quark_Backend.Hubs
             await Clients.All.SendAsync("ReceiveUser", user);
         }
 
-        public async Task PushMessage(string message)
+        public async Task PushMessage(string message, string username)
         {
-            await Clients.All.SendAsync("ReceiveMessage", message);
+            await Clients.All.SendAsync("ReceiveMessage", message, username);
         }
     }
 }

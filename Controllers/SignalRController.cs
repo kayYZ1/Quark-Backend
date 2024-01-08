@@ -46,9 +46,9 @@ namespace Quark_Backend.Controllers
         [HttpPost]
         [Route("PushMessage")]
 
-        public async Task<IActionResult> PushMessage(String message)
+        public async Task<IActionResult> PushMessage(string message, string username)
         {
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage", message);
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", message, username);
             return Ok("Success");
         }
     }

@@ -19,7 +19,7 @@ namespace Quark_Backend.Hubs
             {
                 var user = await db.Users
                     .Include(u => u.Connections)
-                    .FirstAsync(u => u.Username == Context.User.Identity.Name);//does token generation (ClaimType.Name) set Identity.Name value properly?
+                    .FirstOrDefaultAsync(u => u.Username == Context.User.Identity.Name);//does token generation (ClaimType.Name) set Identity.Name value properly?
                 if (user == null)
                 {
                     return;
@@ -38,7 +38,7 @@ namespace Quark_Backend.Hubs
             int connectionId = int.Parse(Context.ConnectionId);
             using(var db = new QuarkDbContext())
             {
-                var connection = await db.Connections.Include(c => c.User).FirstAsync(c => c.Id == connectionId);
+                var connection = await db.Connections.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == connectionId);
                 user =  connection.User;
             }
             foreach (var conversation in user.Conversations)//because connectionId is different everytime user connects to application
@@ -71,7 +71,7 @@ namespace Quark_Backend.Hubs
             {
                 Conversation conversation = await db.Conversations
                     .Include(c => c.Messages).ThenInclude(m => m.User)
-                    .FirstAsync(c => c.Name == conversationName);
+                    .FirstOrDefaultAsync(c => c.Name == conversationName);
                 if(conversation is null)
                     return;
                 conversationModel = new ConversationMessagesModel();
@@ -97,13 +97,13 @@ namespace Quark_Backend.Hubs
         {
             using(var db = new QuarkDbContext())
             {
-                var conversation = await db.Conversations.Include(c => c.Users).FirstAsync(c => c.
+                var conversation = await db.Conversations.Include(c => c.Users).FirstOrDefaultAsync(c => c.
                 Name == conversationName);
                 if(conversation.Users.First(u => u.Username == username) != null)
                 {
                     return;//user is already in conversation
                 }
-                var userToAdd = await db.Users.FirstAsync(u => u.Username == username);
+                var userToAdd = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
                 var usersCount = conversation.Users.Count;
                 if(usersCount == 1) //initiating private conversation - is this case possible? how can user have conversation with only him in first place?
                 {
@@ -162,7 +162,7 @@ namespace Quark_Backend.Hubs
             using(var db = new QuarkDbContext())
             {
                 //TODD: add TimeOnly property to Message entity and do MIGRATION
-                Conversation conversation = await db.Conversations.Include(c => c.Messages).FirstAsync();
+                Conversation conversation = await db.Conversations.Include(c => c.Messages).FirstOrDefaultAsync();
                 if(conversation is null) 
                     return;
                 User user = db.Users.First(u => u.Username == username);

@@ -22,7 +22,7 @@ public static class NameGenerator
             {
                 digitsPart = random.Next(10000).ToString();//0-9999
                 tempUsername = firstNamePart + lastNamePart + digitsPart;
-                user = await db.Users.FirstAsync(u => u.Username == tempUsername);
+                user = await db.Users.FirstOrDefaultAsync(u => u.Username == tempUsername);
                 if(user == null) break;
             } while(true);
         }

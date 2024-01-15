@@ -18,9 +18,10 @@ public class ConversationController : ControllerBase
         _context = context;
     }    
 
+    [HttpPost]
     public async Task ChangeConversationName(string name)
     {
-        var conversation = await _context.Conversations.FirstAsync(c => c.Name == name);
+        var conversation = await _context.Conversations.FirstOrDefaultAsync(c => c.Name == name);
         if(conversation is null)
             return;
         conversation.Name = name;

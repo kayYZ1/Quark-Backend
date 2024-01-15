@@ -216,8 +216,10 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<BasicConversationModel>> GetConversations(int ownedId)
     {
-        var user = await _context.Users.Include(u => u.Conversations).
-                                        FirstAsync(u => u.Id == ownedId);
+        var user = await _context.Users
+            .Include(u => u.Conversations)
+            .ThenInclude(c => c.Users)
+            .FirstAsync(u => u.Id == ownedId);
         var conversationModel = new BasicConversationModel() 
         {
             Conversations = new List<BasicConversationModel.Conversation>()

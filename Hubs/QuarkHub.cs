@@ -64,6 +64,34 @@ namespace Quark_Backend.Hubs
         //     }
         // }
 
+        public async Task OpenConversation(string conversationName) //alternative name: GetConversation
+        {
+            ConversationMessagesModel conversationModel;
+            using(var db = new QuarkDbContext())
+            {
+                Conversation conversation = await db.Conversations
+                    .Include(c => c.Messages).ThenInclude(m => m.User)
+                    .FirstAsync(c => c.Name == conversationName);
+                if(conversation is null)
+                    return;
+                conversationModel = new ConversationMessagesModel();
+                foreach(var message in conversation.Messages)
+                {
+                    conversationModel.Messages.Add
+                    (
+                        new ConversationMessagesModel.Message
+                        {
+                            Username = message.User.Username,
+                            Text = message.Text,
+                            Date = message.SentDate
+                        }
+                    );
+                }
+            }
+            await Clients.Caller.SendAsync("ShowConversation", conversationModel);
+            //invoke ShowConversation frontend method
+        }
+
         //should initiating new conversation be implemented in seperated method?
         public async Task AddToConversation(string conversationName, string username)
         {
@@ -128,9 +156,41 @@ namespace Quark_Backend.Hubs
             await Clients.All.SendAsync("ReceiveUser", user);
         }
 
-        public async Task PushMessage(string message, string username)
+        // should work for both "private" and "group" messages
+        public async Task SendMessage(string text, string username, string conversationName)
         {
-            await Clients.All.SendAsync("ReceiveMessage", message, username);
+            using(var db = new QuarkDbContext())
+            {
+                //TODD: add TimeOnly property to Message entity and do MIGRATION
+                Conversation conversation = await db.Conversations.Include(c => c.Messages).FirstAsync();
+                if(conversation is null) 
+                    return;
+                User user = db.Users.First(u => u.Username == username);
+                if(user is null)
+                    return;
+                var currentDate = DateOnly.FromDateTime(DateTime.Now);
+                Message message = new Message
+                {
+                    SentDate = currentDate,
+                    User = user,
+                    Conversation = conversation,
+                    Text = text
+                };
+                conversation.Messages.Add(message);
+                try
+                {
+                    await db.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+
+                }
+                finally
+                {
+                    await Clients.Group(conversationName).SendAsync("ReceiveMessage", username, text);
+                }
+            }  
+            // await Clients.All.SendAsync("ReceiveMessage", message, username);
         }
     }
 }

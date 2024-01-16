@@ -92,31 +92,69 @@ namespace Quark_Backend.Hubs
             //invoke ShowConversation frontend method
         }
 
+        public async Task InitiatePrivateConversation(string username) // alternative name: AddToPrivateConversation
+        {
+            string newConversationName;
+            using(var db = new QuarkDbContext())
+            {
+                // var users = await db.Users.ToListAsync();
+                // var userA = users.FirstOrDefault(u => u.Username == username);
+                // var userB = users.FirstOrDefault(u => u.Username == Context.User.Identity.Name);
+                var mutualConversations = await db.Conversations.Include(c => c.Users).Where(c => c.Users.Any(u => u.Username == username) && c.Users.Any(u => u.Username == Context.User.Identity.Name)).ToListAsync();
+                var bothUsers = db.Users.Include(u => u.Connections).Where(u => u.Username == username || u.Username == Context.User.Identity.Name);
+                bool isPrivate = false;
+                foreach(var conversation in mutualConversations)
+                {
+                    if(conversation.Users.Count == 2)
+                    {
+                        isPrivate = true;// could be: return
+                        break;
+                    }
+                }
+                if(isPrivate) //has private conversation -> dont make room/conversation
+                    return; // maybe send conversation name?
+                newConversationName = NameGenerator.GenerateRandomConversationName();
+                var newConversation = new Conversation
+                {
+                    Name = newConversationName
+                };
+                db.Conversations.Add(newConversation);
+                foreach(var user in bothUsers)
+                {
+                    foreach(var connection in user.Connections)
+                    {
+                        var connectionId = connection.Id.ToString();
+                        await Groups.AddToGroupAsync(connectionId, newConversationName);
+                    }
+                    newConversation.Users.Add(user);
+                }
+                await db.SaveChangesAsync();
+            }
+            Clients.Caller.SendAsync("InitiatePrivateConversationHandler", newConversationName);//change name of method
+        }
+
         //should initiating new conversation be implemented in seperated method?
         public async Task AddToConversation(string conversationName, string username)
         {
+            string currentConversationName = conversationName;
             using(var db = new QuarkDbContext())
             {
-                var conversation = await db.Conversations.Include(c => c.Users).FirstOrDefaultAsync(c => c.
-                Name == conversationName);
-                if(conversation.Users.First(u => u.Username == username) != null)
-                {
+                var conversation = await db.Conversations.Include(c => c.Users).FirstOrDefaultAsync(c => c.Name == conversationName);
+                if(conversation is null)
+                    return;
+                if(conversation.Users.FirstOrDefault(u => u.Username == username) != null)
                     return;//user is already in conversation
-                }
+
                 var userToAdd = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
                 var usersCount = conversation.Users.Count;
-                if(usersCount == 1) //initiating private conversation - is this case possible? how can user have conversation with only him in first place?
-                {
-
-                }
-                else if(usersCount <= 2) //create new room to prevent adding new member to existing private conversation
+                if(usersCount <= 2) //create new room to prevent adding new member to existing private conversation
                 {
                     //generate roomHash/roomName that will be possible to change into custom name
                     string randomName;
                     while(true)
                     {
                         randomName = NameGenerator.GenerateRandomConversationName();
-                        if(db.Conversations.First(c => c.Name == randomName) == null)
+                        if(db.Conversations.FirstOrDefault(c => c.Name == randomName) == null)
                         {
                             break;
                         }
@@ -147,9 +185,17 @@ namespace Quark_Backend.Hubs
                         await Groups.AddToGroupAsync(connectionId, conversation.Name);
                     }
                     conversation.Users.Add(userToAdd);
-                    await db.SaveChangesAsync();
+                    try
+                    {
+                        await db.SaveChangesAsync();
+                    }
+                    catch(DbUpdateException)
+                    {
+                        return;
+                    }
                 }
             }
+            await Clients.Caller.SendAsync("UpdateConversations", currentConversationName);
         }
         public async Task BroadcastUser(User user)
         {
@@ -165,7 +211,7 @@ namespace Quark_Backend.Hubs
                 Conversation conversation = await db.Conversations.Include(c => c.Messages).FirstOrDefaultAsync();
                 if(conversation is null) 
                     return;
-                User user = db.Users.First(u => u.Username == username);
+                User user = db.Users.FirstOrDefault(u => u.Username == username);
                 if(user is null)
                     return;
                 var currentDate = DateOnly.FromDateTime(DateTime.Now);

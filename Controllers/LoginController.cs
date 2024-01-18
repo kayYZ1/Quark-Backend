@@ -44,6 +44,7 @@ namespace Quark_Backend.Controllers
                 );
                 var user = new
                 {
+                    _user.Id,
                     _user.Email,
                     _user.FirstName,
                     _user.LastName,

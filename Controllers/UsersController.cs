@@ -237,7 +237,8 @@ public class UsersController : ControllerBase
                         Id = u.Id,
                         FirstName = u.FirstName,
                         LastName = u.LastName,
-                        Username = u.Username
+                        Username = u.Username,
+                        PictureUrl = u.PictureUrl
                     }
                 );
             }
@@ -265,11 +266,11 @@ public class UsersController : ControllerBase
             {
                 Id = user.Id,
                 Email = user.Email,
+                Username = user.Username,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 PictureUrl = user.PictureUrl
             };
-
             users.Add(data);
         }
         return users;

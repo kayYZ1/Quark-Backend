@@ -50,7 +50,7 @@ namespace Quark_Backend.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task OpenConversation(string conversationName) //alternative name: GetConversation
+        public async Task OpenConversation(string conversationName)
         {
             ConversationMessagesModel conversationModel;
             using (var db = new QuarkDbContext())
@@ -83,9 +83,11 @@ namespace Quark_Backend.Hubs
             await Clients.Caller.SendAsync("ShowConversation", conversationModel.Messages);
         }
 
-        public async Task InitiatePrivateConversation(string username) // alternative name: AddToPrivateConversation
+        public async Task InitiatePrivateConversation(string username, string loggedUsername)
         {
             string newConversationName;
+            var conversationData = new BasicConversationModel.Conversation();
+
             using (var db = new QuarkDbContext())
             {
                 // var users = await db.Users.ToListAsync();
@@ -96,12 +98,12 @@ namespace Quark_Backend.Hubs
                     .Where(
                         c =>
                             c.Users.Any(u => u.Username == username)
-                            && c.Users.Any(u => u.Username == Context.User.Identity.Name)
+                            && c.Users.Any(u => u.Username == loggedUsername)
                     )
                     .ToListAsync();
                 var bothUsers = db.Users
                     .Include(u => u.Connections)
-                    .Where(u => u.Username == username || u.Username == Context.User.Identity.Name);
+                    .Where(u => u.Username == username || u.Username == loggedUsername);
                 bool isPrivate = false;
                 foreach (var conversation in mutualConversations)
                 {
@@ -116,18 +118,37 @@ namespace Quark_Backend.Hubs
                 newConversationName = NameGenerator.GenerateRandomConversationName();
                 var newConversation = new Conversation { Name = newConversationName };
                 db.Conversations.Add(newConversation);
+
+                var users = new List<BasicConversationModel.User>();
                 foreach (var user in bothUsers)
                 {
-                    /*foreach (var connection in user.Connections)
+                    foreach (var connection in user.Connections)
                     {
                         var connectionId = connection.Id.ToString();
                         await Groups.AddToGroupAsync(connectionId, newConversationName);
-                    }*/
+                    }
+                    users.Add(
+                        new BasicConversationModel.User()
+                        {
+                            Id = user.Id,
+                            FirstName = user.FirstName,
+                            LastName = user.LastName,
+                            Username = user.Username,
+                            PictureUrl = user.PictureUrl
+                        }
+                    );
                     newConversation.Users.Add(user);
                 }
+                conversationData = new BasicConversationModel.Conversation
+                {
+                    Id = newConversation.Id,
+                    Name = newConversation.Name,
+                    IsPrivate = true,
+                    Users = users
+                };
                 await db.SaveChangesAsync();
             }
-            Clients.Caller.SendAsync("InitiatePrivateConversationHandler", newConversationName); //change name of method
+            Clients.Caller.SendAsync("InitiatePrivateConversation", conversationData); //change name of method
         }
 
         //should initiating new conversation be implemented in seperated method?

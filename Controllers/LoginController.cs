@@ -39,10 +39,12 @@ namespace Quark_Backend.Controllers
             {
                 string token = _securityService.GenerateToken(
                     _user.Email,
-                    _user.PermissionLevel.ToString()
+                    _user.PermissionLevel.ToString(),
+                    _user.Username
                 );
                 var user = new
                 {
+                    _user.Id,
                     _user.Email,
                     _user.FirstName,
                     _user.LastName,
@@ -57,14 +59,6 @@ namespace Quark_Backend.Controllers
             {
                 return Unauthorized("Invalid email or password");
             }
-            // Version for hashed password
-            //var hashedPasswordFromDatabase = user.Password; // Retrieve the hashed password from the database
-            //bool passwordMatch = BCrypt.Net.BCrypt.Verify(model.Password, hashedPasswordFromDatabase);
-            //if (!passwordMatch)
-            //{
-            //   return Unauthorized("Invalid email or password");
-            //}
-            //return Ok(GenerateToken(user.Email, user.PermissionLevel.ToString()));
         }
     }
 }

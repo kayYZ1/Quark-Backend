@@ -12,9 +12,7 @@ public static class ModelBuilderExtensions
             {
                 Id = 1,
                 Name = "IT"
-            }
-        );
-        modelBuilder.Entity<Department>().HasData(
+            },
             new Department
             {
                 Id = 2,
@@ -29,49 +27,37 @@ public static class ModelBuilderExtensions
                 Id = 1,
                 Name = "Junior Web Developer",
                 DepartmentId = 1
-            }
-        );
-        modelBuilder.Entity<JobPosition>().HasData(
+            },
             new JobPosition
             {
                 Id = 2,
                 Name = "Mid Web Developer",
                 DepartmentId = 1
-            }
-        );
-        modelBuilder.Entity<JobPosition>().HasData(
+            },
             new JobPosition
             {
                 Id = 3,
                 Name = "Senior Web Developer",
                 DepartmentId = 1
-            }
-        );
-        modelBuilder.Entity<JobPosition>().HasData(
+            },
             new JobPosition
             {
                 Id = 4,
                 Name = "Junior Software Developer",
                 DepartmentId = 1
-            }
-        );
-        modelBuilder.Entity<JobPosition>().HasData(
+            },
             new JobPosition
             {
                 Id = 5,
                 Name = "Mid Software Developer",
                 DepartmentId = 1
-            }
-        );
-        modelBuilder.Entity<JobPosition>().HasData(
+            },
             new JobPosition
             {
                 Id = 6,
                 Name = "Senior Software Developer",
                 DepartmentId = 1
-            }
-        );
-        modelBuilder.Entity<JobPosition>().HasData(
+            },
             new JobPosition
             {
                 Id = 7,
@@ -87,25 +73,19 @@ public static class ModelBuilderExtensions
                 Id = 1,
                 Email = "adam.kowalski@gmail.com",
                 Password = "1234"
-            }
-        );
-        modelBuilder.Entity<User>().HasData(
+            },
             new User
             {
                 Id = 2,
                 Email = "jan.nowak@gmail.com",
                 Password = "1234"
-            }
-        );
-        modelBuilder.Entity<User>().HasData(
+            },
             new User
             {
                 Id = 3,
                 Email = "weronika.kowalczyk@gmail.com",
                 Password = "1234"
-            }
-        );
-        modelBuilder.Entity<User>().HasData(
+            },
             new User
             {
                 Id = 4,

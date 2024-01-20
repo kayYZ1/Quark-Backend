@@ -122,11 +122,11 @@ namespace Quark_Backend.Hubs
                 var users = new List<BasicConversationModel.User>();
                 foreach (var user in bothUsers)
                 {
-                    foreach (var connection in user.Connections)
+                    /*foreach (var connection in user.Connections)
                     {
                         var connectionId = connection.Id.ToString();
                         await Groups.AddToGroupAsync(connectionId, newConversationName);
-                    }
+                    }*/
                     users.Add(
                         new BasicConversationModel.User()
                         {
@@ -231,7 +231,7 @@ namespace Quark_Backend.Hubs
                 //TODD: add TimeOnly property to Message entity and do MIGRATION
                 Conversation conversation = await db.Conversations
                     .Include(c => c.Messages)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(c => c.Name == conversationName);
                 if (conversation is null)
                     return;
                 User user = db.Users.FirstOrDefault(u => u.Username == messageModel.Username);
@@ -246,6 +246,7 @@ namespace Quark_Backend.Hubs
                     Text = messageModel.Text,
                     Timestamp = messageModel.Timestamp
                 };
+                Console.WriteLine(conversation.Id);
                 conversation.Messages.Add(message);
                 try
                 {

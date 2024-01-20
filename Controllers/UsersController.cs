@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Quark_Backend.DAL;
 using Quark_Backend.Entities;
 using Quark_Backend.Models;
+using Quark_Backend.Utilities;
 
 namespace Quark_Backend.Controllers;
 
@@ -32,14 +33,6 @@ public class UsersController : ControllerBase
         return _context.Users.Any(u => u.Email == email);
     }
 
-    [HttpGet]
-    public string GenerateUsername(string firstName, string lastName) //in future remove [HttpGet] and make private
-    {
-        string firstPart = firstName.Substring(0, Math.Min(3, firstName.Length));
-        string lastPart = lastName.Substring(0, Math.Min(3, lastName.Length));
-
-        return firstPart + lastPart;
-    }
 
     [HttpGet]
     public IActionResult Check(string email)
@@ -221,6 +214,46 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
+    public async Task<ActionResult<BasicConversationModel>> GetConversations(int ownedId)
+    {
+        var user = await _context.Users
+            .Include(u => u.Conversations)
+            .ThenInclude(c => c.Users)
+            .FirstOrDefaultAsync(u => u.Id == ownedId);
+        var conversationModel = new BasicConversationModel() 
+        {
+            Conversations = new List<BasicConversationModel.Conversation>()
+        };
+        foreach(var conversation in user.Conversations)
+        {
+            bool isPrivate = conversation.Users.Count <= 2 ? true : false;
+            var users = new List<BasicConversationModel.User>();
+            foreach(var u in conversation.Users)
+            {
+                users.Add
+                (
+                    new BasicConversationModel.User()
+                    {
+                        Id = u.Id,
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        Username = u.Username
+                    }
+                );
+            }
+            var conversationData = new BasicConversationModel.Conversation
+            {
+                Id = conversation.Id,
+                Name = conversation.Name,
+                IsPrivate = isPrivate,
+                Users = users
+            };
+            conversationModel.Conversations.Add(conversationData);
+        }
+        return Ok(conversationModel);
+    }
+
+    [HttpGet]
     public async Task<ActionResult<List<object>>> GetUsers()
     {
         List<User> _users = await _context.Users.ToListAsync();
@@ -246,7 +279,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> UpdateProfile([FromBody] UserInfoModel userData)
     {
         //problem if two departments have job with the same name; could be fixed if department name would be included in UserInfoModel
-        var jobReference = await _context.JobPositions.Include(j => j.Department).FirstAsync(j => j.Name == userData.JobPosition);//TODO: catch InvalidOperationException (when FirstAsync returns no elements)
+        var jobReference = await _context.JobPositions.Include(j => j.Department).FirstOrDefaultAsync(j => j.Name == userData.JobPosition);//TODO: catch InvalidOperationException (when FirstOrDefaultAsync returns no elements)
         if(jobReference is null && (userData.JobPosition.IsNullOrEmpty() == false)) 
             return BadRequest("There are no job positions with that name");
         var _user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userData.Email);
@@ -259,7 +292,7 @@ public class UsersController : ControllerBase
         _user.SelfDescription = userData.SelfDescription;
         _user.PictureUrl = userData.PictureUrl;
         _user.JobPosition = jobReference;
-        _user.Username = GenerateUsername(_user.FirstName, _user.LastName);
+        _user.Username = await NameGenerator.GenerateUsername(_user.FirstName, _user.LastName);
         var user = new
         {
             _user.Id,

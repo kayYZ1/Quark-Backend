@@ -39,7 +39,8 @@ namespace Quark_Backend.Controllers
             {
                 string token = _securityService.GenerateToken(
                     _user.Email,
-                    _user.PermissionLevel.ToString()
+                    _user.PermissionLevel.ToString(),
+                    _user.Username
                 );
                 var user = new
                 {

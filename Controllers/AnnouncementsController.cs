@@ -54,7 +54,7 @@ public class AnnouncementsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AddAnnouncement([FromBody] AnnouncementModel _announcement)
     {
-        var userRef = await _context.Users.FirstAsync(u => u.Email == _announcement.Email);
+        var userRef = await _context.Users.FirstOrDefaultAsync(u => u.Email == _announcement.Email);
         var userFirstName = userRef.FirstName;
         var userLastName = userRef.LastName;
         var userPictureUrl = userRef.PictureUrl;
@@ -92,8 +92,8 @@ public class AnnouncementsController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteAnnouncement([FromBody] AnnouncementModel _announcement)
     {
-        var userRef = await _context.Users.FirstAsync(u => u.Email == _announcement.Email);
-        var announcement = await _context.Announcements.FirstAsync(a => a.Id == _announcement.Id);
+        var userRef = await _context.Users.FirstOrDefaultAsync(u => u.Email == _announcement.Email);
+        var announcement = await _context.Announcements.FirstOrDefaultAsync(a => a.Id == _announcement.Id);
         if (userRef.Id != announcement.UserId)
         {
             return BadRequest("You are not authorized to delete this announcement");

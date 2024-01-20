@@ -21,7 +21,7 @@ namespace Quark_Backend.Services
                 new Claim(JwtRegisteredClaimNames.Sub, Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("PermissionLevel", PermissionLevel.ToString()),
-                new Claim(ClaimTypes.Name, Username)
+                new Claim(JwtRegisteredClaimNames.Name, Username)
             };
 
             var token = new JwtSecurityToken(

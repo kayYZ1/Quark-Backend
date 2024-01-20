@@ -7,16 +7,12 @@ namespace Quark_Backend.DAL;
 
 public partial class QuarkDbContext : DbContext
 {
-    public QuarkDbContext()
-    {
-    }
+    public QuarkDbContext() { }
 
     public QuarkDbContext(DbContextOptions<QuarkDbContext> options)
-        : base(options)
-    {
-    }
+        : base(options) { }
 
-    public virtual DbSet<Announcement> Announcements {get; set;}
+    public virtual DbSet<Announcement> Announcements { get; set; }
 
     public virtual DbSet<Conversation> Conversations { get; set; }
     public virtual DbSet<Connection> Connections { get; set; }
@@ -31,8 +27,8 @@ public partial class QuarkDbContext : DbContext
 
     public virtual DbSet<UsersConversation> UsersConversations { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Host=localhost;Database=quark_db;Username=user;Password=1234");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
+        optionsBuilder.UseNpgsql("Host=localhost;Database=quark_db;Username=user;Password=1234");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,15 +38,15 @@ public partial class QuarkDbContext : DbContext
 
             entity.ToTable("announcements");
 
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).UseIdentityAlwaysColumn().HasColumnName("id");
             entity.Property(e => e.Title).HasColumnName("title").HasMaxLength(30);
             entity.Property(e => e.Content).HasColumnName("content").HasMaxLength(150);
             entity.Property(e => e.Time).HasColumnName("time");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Announcements)
+            entity
+                .HasOne(d => d.User)
+                .WithMany(p => p.Announcements)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("announcements_user_id_fkey");
@@ -61,13 +57,12 @@ public partial class QuarkDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("conversations_pkey");
             entity.HasIndex(e => e.Name).IsUnique(true);
             entity.ToTable("conversations");
-            
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
-            entity.Property(e => e.Name)
-                .HasColumnName("name").HasMaxLength(40);
-            entity.HasMany(e => e.Users).WithMany(e => e.Conversations)
+
+            entity.Property(e => e.Id).UseIdentityAlwaysColumn().HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(40);
+            entity
+                .HasMany(e => e.Users)
+                .WithMany(e => e.Conversations)
                 .UsingEntity<UsersConversation>();
         });
         modelBuilder.Entity<Connection>(entity =>
@@ -76,15 +71,13 @@ public partial class QuarkDbContext : DbContext
 
             entity.ToTable("connections");
 
-            entity.Property(e => e.Id)
-                .HasColumnName("id");
-            entity.Property(e => e.UserAgent)
-                .HasColumnName("user_agent");
-            entity.Property(e => e.State)
-                .HasColumnName("state");
-            entity.Property(e => e.UserId).
-                HasColumnName("user_id");
-            entity.HasOne(c => c.User).WithMany(u => u.Connections)
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserAgent).HasColumnName("user_agent");
+            entity.Property(e => e.State).HasColumnName("state");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity
+                .HasOne(c => c.User)
+                .WithMany(u => u.Connections)
                 .HasForeignKey(e => e.UserId)
                 .HasConstraintName("connections_users_id_fkey");
         });
@@ -94,12 +87,8 @@ public partial class QuarkDbContext : DbContext
             entity.HasIndex(e => e.Name).IsUnique(true);
             entity.ToTable("departments");
 
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(30)
-                .HasColumnName("name");
+            entity.Property(e => e.Id).UseIdentityAlwaysColumn().HasColumnName("id");
+            entity.Property(e => e.Name).HasMaxLength(30).HasColumnName("name");
         });
 
         modelBuilder.Entity<JobPosition>(entity =>
@@ -108,15 +97,13 @@ public partial class QuarkDbContext : DbContext
 
             entity.ToTable("job_positions");
 
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).UseIdentityAlwaysColumn().HasColumnName("id");
             entity.Property(e => e.DepartmentId).HasColumnName("department_id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(30)
-                .HasColumnName("name");
+            entity.Property(e => e.Name).HasMaxLength(30).HasColumnName("name");
 
-            entity.HasOne(d => d.Department).WithMany(p => p.JobPositions)
+            entity
+                .HasOne(d => d.Department)
+                .WithMany(p => p.JobPositions)
                 .HasForeignKey(d => d.DepartmentId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("job_positions_department_id_fkey");
@@ -128,20 +115,23 @@ public partial class QuarkDbContext : DbContext
 
             entity.ToTable("messages");
 
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).UseIdentityAlwaysColumn().HasColumnName("id");
             entity.Property(e => e.ConversationId).HasColumnName("conversation_id");
             entity.Property(e => e.SentDate).HasColumnName("sent_date");
+            entity.Property(e => e.Timestamp).HasColumnName("timestamp");
             entity.Property(e => e.Text).HasColumnName("text");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
-            entity.HasOne(d => d.Conversation).WithMany(p => p.Messages)
+            entity
+                .HasOne(d => d.Conversation)
+                .WithMany(p => p.Messages)
                 .HasForeignKey(d => d.ConversationId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("messages_conversation_id_fkey");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Messages)
+            entity
+                .HasOne(d => d.User)
+                .WithMany(p => p.Messages)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("messages_user_id_fkey");
@@ -152,57 +142,46 @@ public partial class QuarkDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("users_pkey");
 
             entity.ToTable("users");
-            entity.HasIndex(e => e.Username)
-                .IsUnique(true);
-            entity.HasIndex(e => e.Email)
-                .IsUnique(true);
+            entity.HasIndex(e => e.Username).IsUnique(true);
+            entity.HasIndex(e => e.Email).IsUnique(true);
 
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
-            entity.Property(e => e.Email)
-                .HasMaxLength(50)
-                .HasColumnName("email");
-            entity.Property(e => e.Username)
-                .HasMaxLength(30)
-                .HasColumnName("username");
-            entity.Property(e => e.FirstName)
-                .HasMaxLength(20)
-                .HasColumnName("first_name");
+            entity.Property(e => e.Id).UseIdentityAlwaysColumn().HasColumnName("id");
+            entity.Property(e => e.Email).HasMaxLength(50).HasColumnName("email");
+            entity.Property(e => e.Username).HasMaxLength(30).HasColumnName("username");
+            entity.Property(e => e.FirstName).HasMaxLength(20).HasColumnName("first_name");
             entity.Property(e => e.JobId).HasColumnName("job_id");
-            entity.Property(e => e.LastName)
-                .HasMaxLength(20)
-                .HasColumnName("last_name");
-            entity.Property(e => e.Password)
-                .HasMaxLength(40)
-                .HasColumnName("password");
+            entity.Property(e => e.LastName).HasMaxLength(20).HasColumnName("last_name");
+            entity.Property(e => e.Password).HasMaxLength(40).HasColumnName("password");
             entity.Property(e => e.PermissionLevel).HasColumnName("permission_level");
-            entity.Property(e => e.SelfDescription)
+            entity
+                .Property(e => e.SelfDescription)
                 .HasMaxLength(300)
                 .HasColumnName("self_description");
-            entity.Property(e => e.PictureUrl)
-                .HasMaxLength(100)
-                .HasColumnName("picture_url");
-            entity.HasOne(u => u.JobPosition).WithMany(p => p.Users)
+            entity.Property(e => e.PictureUrl).HasMaxLength(100).HasColumnName("picture_url");
+            entity
+                .HasOne(u => u.JobPosition)
+                .WithMany(p => p.Users)
                 .HasForeignKey(u => u.JobId)
                 .HasConstraintName("users_job_positions_id_fkey");
         });
 
         modelBuilder.Entity<UsersConversation>(entity =>
         {
-            entity.HasKey(e => new {e.UsersId, e.ConversationsId});
+            entity.HasKey(e => new { e.UsersId, e.ConversationsId });
             entity.ToTable("users_conversations");
-            entity.Property(e => e.ConversationsId)
-                .HasColumnName("conversations_id");
-            entity.Property(e => e.UsersId)
-                .HasColumnName("users_id");
+            entity.Property(e => e.ConversationsId).HasColumnName("conversations_id");
+            entity.Property(e => e.UsersId).HasColumnName("users_id");
 
-            entity.HasOne(d => d.Conversations).WithMany()
+            entity
+                .HasOne(d => d.Conversations)
+                .WithMany()
                 .HasForeignKey(d => d.ConversationsId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("users_conversations_conversations_id_fkey");
 
-            entity.HasOne(d => d.Users).WithMany()
+            entity
+                .HasOne(d => d.Users)
+                .WithMany()
                 .HasForeignKey(d => d.UsersId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("users_conversations_users_id_fkey");

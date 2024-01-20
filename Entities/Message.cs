@@ -8,6 +8,8 @@ public partial class Message
     public int Id { get; set; }
 
     public DateOnly SentDate { get; set; }
+    
+    public string Timestamp { get; set; }
 
     public string Text { get; set; } = null!;
 

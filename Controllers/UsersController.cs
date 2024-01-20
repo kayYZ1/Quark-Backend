@@ -220,15 +220,15 @@ public class UsersController : ControllerBase
             .Include(u => u.Conversations)
             .ThenInclude(c => c.Users)
             .FirstOrDefaultAsync(u => u.Id == ownedId);
-        var conversationModel = new BasicConversationModel() 
+        var conversationModel = new BasicConversationModel()
         {
             Conversations = new List<BasicConversationModel.Conversation>()
         };
-        foreach(var conversation in user.Conversations)
+        foreach (var conversation in user.Conversations)
         {
             bool isPrivate = conversation.Users.Count <= 2 ? true : false;
             var users = new List<BasicConversationModel.User>();
-            foreach(var u in conversation.Users)
+            foreach (var u in conversation.Users)
             {
                 users.Add
                 (
@@ -281,7 +281,7 @@ public class UsersController : ControllerBase
     {
         //problem if two departments have job with the same name; could be fixed if department name would be included in UserInfoModel
         var jobReference = await _context.JobPositions.Include(j => j.Department).FirstOrDefaultAsync(j => j.Name == userData.JobPosition);//TODO: catch InvalidOperationException (when FirstOrDefaultAsync returns no elements)
-        if(jobReference is null && (userData.JobPosition.IsNullOrEmpty() == false)) 
+        if (jobReference is null && (userData.JobPosition.IsNullOrEmpty() == false))
             return BadRequest("There are no job positions with that name");
         var _user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userData.Email);
         if (_user == null)
@@ -345,4 +345,44 @@ public class UsersController : ControllerBase
         }
         return Ok(user);
     }
+        [HttpPost]
+
+        public async Task<IActionResult> userMonitoring()
+        {
+            try
+            {
+                DateOnly currentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+
+                var usersWithConnections = await _context.Users
+                    .Where(u => u.Connections.Any())
+                    .CountAsync();
+
+                var messagesSentToday = await _context.Messages
+                    .Where(m => m.SentDate == currentDate)
+                    .CountAsync();
+
+                // Query to get the count of people with connections from each department
+                var departmentCounts = await _context.Departments
+                    .Select(d => new
+                    {
+                        DepartmentName = d.Name,
+                        UsersWithConnections = d.JobPositions.SelectMany(j => j.Users).Count(u => u.Connections.Any())
+                    })
+                    .ToListAsync();
+
+                var result = new
+                {
+                    UsersWithConnections = usersWithConnections,
+                    MessagesSentToday = messagesSentToday,
+                    DepartmentCounts = departmentCounts
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions if any
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
 }

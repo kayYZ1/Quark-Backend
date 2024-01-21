@@ -21,7 +21,7 @@ namespace Quark_Backend.Services
                 new Claim(JwtRegisteredClaimNames.Sub, Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("PermissionLevel", PermissionLevel.ToString()),
-                new Claim(JwtRegisteredClaimNames.Name, Username)
+                //new Claim(JwtRegisteredClaimNames.Name, Username) Throwing error while login in (first time login).
             };
 
             var token = new JwtSecurityToken(

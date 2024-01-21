@@ -34,7 +34,9 @@ namespace Quark_Backend.Controllers
             {
                 return Unauthorized("Invalid email or password");
             }
+            var jobReference = await _dbContext.JobPositions.Include(j => j.Department).FirstOrDefaultAsync(j => j.Id == _user.JobId); //Has to be here in login 
             // Version for open password
+            _user.JobPosition = jobReference;
             if (model.Password == _user.Password)
             {
                 string token = _securityService.GenerateToken(
@@ -50,6 +52,7 @@ namespace Quark_Backend.Controllers
                     _user.LastName,
                     _user.Username,
                     _user.SelfDescription,
+                    _user.JobPosition,
                     _user.PictureUrl
                 };
                 var response = new { user, token };

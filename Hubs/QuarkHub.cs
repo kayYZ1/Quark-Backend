@@ -13,38 +13,21 @@ namespace Quark_Backend.Hubs
 {
     public class QuarkHub : Hub
     {
-        public override async Task OnConnectedAsync()
+       public override async Task OnConnectedAsync()
         {
-            User user;
             using (var db = new QuarkDbContext())
             {
-                user = await db.Users
+                var user = await db.Users
                     .Include(u => u.Connections)
                     .FirstOrDefaultAsync(u => u.Username == Context.User.Identity.Name); //does token generation (ClaimType.Name) set Identity.Name value properly?
                 if (user == null)
-                    return;
-                // var httpContext = Context.GetHttpContext();
-                // var headers = httpContext.Request.Headers;
-                user.Connections.Add(
-                    new Connection
-                    {
-                        Id = int.Parse(Context.ConnectionId),//TODO: add migration to change Id to ConnectionId that is string
-                        State = true,//unnecessary field
-                        // UserAgent = headers["User-Agent"],//or ["user-agent"]
-                        User = user
-                    });
-                try
-                {
-                    await db.SaveChangesAsync();
-                }
-                catch(DbUpdateException exception)
                 {
                     return;
                 }
-            }
-            foreach (var conversation in user.Conversations)
-            {
-                Groups.AddToGroupAsync(Context.ConnectionId, conversation.Name);
+                foreach (var conversation in user.Conversations)
+                {
+                    Groups.AddToGroupAsync(Context.ConnectionId, conversation.Name);
+                }
             }
             await base.OnConnectedAsync();
         }

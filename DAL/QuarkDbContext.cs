@@ -28,7 +28,7 @@ public partial class QuarkDbContext : DbContext
     public virtual DbSet<UsersConversation> UsersConversations { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
-        optionsBuilder.UseNpgsql("Host=localhost;Database=quark_db;Username=user;Password=1234");
+        optionsBuilder.UseNpgsql("Host=localhost;Database=quark_db;Username=postgres;Password=1234");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

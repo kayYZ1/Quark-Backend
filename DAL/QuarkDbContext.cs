@@ -187,6 +187,7 @@ public partial class QuarkDbContext : DbContext
                 .HasConstraintName("users_conversations_users_id_fkey");
         });
 
+        modelBuilder.Seed(); //insert example data
         OnModelCreatingPartial(modelBuilder);
     }
 

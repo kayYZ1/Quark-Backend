@@ -3,7 +3,7 @@
 
 Backend module for a web application called 'Quark' that allows it's clients to communicate with one another in real-time.
 
-Backend: https://github.com/kayYZ1/Quark-Frontend
+Frontend: https://github.com/kayYZ1/Quark-Frontend
 
 ### Tech stack
 - C# (ASP .NET CORE)
